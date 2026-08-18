@@ -18,9 +18,15 @@ export async function GET(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const rows = links || [];
-  const totalViews = rows.reduce((s: number, r: any) => s + (r.views || 0), 0);
+  let totalViews = rows.reduce((s: number, r: any) => s + (Number(r.views) || 0), 0);
   const totalClicks = rows.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
   const totalCompletions = rows.reduce((s: number, r: any) => s + (r.completions || 0), 0);
+
+  // If views live on daily aggregates (or links.views is not exposed), fall back to link_analytics.
+  if (totalViews === 0) {
+    const { data: daily } = await db.from("link_analytics").select("views");
+    totalViews = (daily || []).reduce((s: number, r: any) => s + (Number(r.views) || 0), 0);
+  }
 
   // tasks count
   const { count: taskCount } = await db
