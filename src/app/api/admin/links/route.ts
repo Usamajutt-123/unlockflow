@@ -17,5 +17,20 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ links: links || [] });
+  const rows = links || [];
+  const missingViews = rows.some((l: any) => !Number(l.views));
+  if (missingViews && rows.length) {
+    const { data: daily } = await supabaseAdmin.from("link_analytics").select("link_id, views");
+    const byLink: Record<string, number> = {};
+    (daily || []).forEach((r: any) => {
+      const id = String(r.link_id);
+      byLink[id] = (byLink[id] || 0) + (Number(r.views) || 0);
+    });
+    rows.forEach((l: any) => {
+      const fromDaily = byLink[String(l.id)] || 0;
+      l.views = Math.max(Number(l.views) || 0, fromDaily);
+    });
+  }
+
+  return NextResponse.json({ links: rows });
 }
