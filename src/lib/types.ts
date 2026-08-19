@@ -74,13 +74,31 @@ export const POST_CATEGORIES = [
   "Announcements",
 ] as const;
 
-export type AdSlot = "banner" | "task" | "bottom";
-export const AD_SLOTS: AdSlot[] = ["banner", "task", "bottom"];
+export type AdSlot =
+  | "banner"
+  | "task"
+  | "task_center"
+  | "above_unlock"
+  | "faq"
+  | "social";
+export const AD_SLOTS: AdSlot[] = [
+  "banner",
+  "task",
+  "task_center",
+  "above_unlock",
+  "faq",
+  "social",
+];
 export const AD_SLOT_LABELS: Record<AdSlot, string> = {
-  banner: "Banner (below hero)",
+  banner: "Banner (below header)",
   task: "In-task (inside task list)",
-  bottom: "Bottom bar (fixed)",
+  task_center: "Task center (middle of tasks)",
+  above_unlock: "Above unlock button",
+  faq: "FAQ section",
+  social: "Social bar (fixed bottom)",
 };
+
+export type AdType = "image" | "script";
 
 export interface Ad {
   id?: string;
@@ -88,6 +106,8 @@ export interface Ad {
   title: string;
   image_url: string;
   link_url: string;
+  type: AdType;        // "image" = banner image ad, "script" = Adsterra/Monetag script
+  script: string;      // raw HTML/JS ad code (used when type === "script")
   active: boolean;
   created_at?: string;
 }

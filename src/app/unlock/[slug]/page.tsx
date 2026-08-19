@@ -8,8 +8,27 @@ import ThemeToggle from "@/components/ThemeToggle";
 import Background from "@/components/Background";
 import { getTheme } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
-import { BannerAd, InlineAd, BottomAdBar } from "@/components/ads";
+import { BannerAd, InlineAd, BoxAd, SocialAdBar } from "@/components/ads";
 import Head from "next/head";
+
+const UNLOCK_FAQS = [
+  {
+    q: "How do I unlock this content?",
+    a: "Tap each task above, finish it in the tab that opens, then come back here and press the Unlock Reward button. The tasks mark themselves as done automatically.",
+  },
+  {
+    q: "Is this safe?",
+    a: "Yes. The tasks only open the links the creator added — UNLOCKFLOW never asks for your passwords or personal login details.",
+  },
+  {
+    q: "A task still shows as not done. What should I do?",
+    a: "Complete the action in the new tab (subscribe, follow, join, etc.), then return to this page. Tap the task again if needed — it will confirm and move to done.",
+  },
+  {
+    q: "What happens after I complete all tasks?",
+    a: "The Unlock Reward button lights up and reveals the reward link the creator prepared for you.",
+  },
+];
 
 export default function UnlockPage({ params }: { params: { slug: string } }) {
   const slug = params.slug;
@@ -25,12 +44,15 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const [passError, setPassError] = useState("");
   const [copied, setCopied] = useState(false);
   const [processing, setProcessing] = useState<{ idx: number; phase: "open" | "confirm" } | null>(null);
-  const [ads, setAds] = useState<{ banner: Ad[]; task: Ad[]; bottom: Ad[] }>({ banner: [], task: [], bottom: [] });
+  const [ads, setAds] = useState<{
+    banner: Ad[]; task: Ad[]; task_center: Ad[]; above_unlock: Ad[]; faq: Ad[]; social: Ad[];
+  }>({ banner: [], task: [], task_center: [], above_unlock: [], faq: [], social: [] });
   const [bottomBarClosed, setBottomBarClosed] = useState(false);
+  const [faqOpen, setFaqOpen] = useState<number | null>(0);
 
   const storageKey = `uf_done_${slug}`;
 
-  // Load ads for the unlock page (banner / in-task / bottom bar).
+  // Load ads for the unlock page (banner / in-task / task-center / above-unlock / faq / social).
   useEffect(() => {
     fetch("/api/ads")
       .then((r) => r.json())
@@ -39,7 +61,10 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         setAds({
           banner: all.filter((a) => a.slot === "banner"),
           task: all.filter((a) => a.slot === "task"),
-          bottom: all.filter((a) => a.slot === "bottom"),
+          task_center: all.filter((a) => a.slot === "task_center"),
+          above_unlock: all.filter((a) => a.slot === "above_unlock"),
+          faq: all.filter((a) => a.slot === "faq"),
+          social: all.filter((a) => a.slot === "social"),
         });
       })
       .catch(() => {});
@@ -255,6 +280,14 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const progress = tasks.length ? Math.round((completed.size / tasks.length) * 100) : 0;
   const th = getTheme(link.theme || "midnight");
 
+  // Placement math for the two in-list ads:
+  //  - "task" (inline) stays after the 2nd task (or the last task for short lists)
+  //  - "task_center" sits in the middle of the list
+  const inlineTaskIdx = Math.min(1, tasks.length - 1);
+  let taskCenterIdx = Math.round(tasks.length / 2) - 1;
+  if (tasks.length < 2) taskCenterIdx = -1;
+  if (ads.task.length > 0 && taskCenterIdx === inlineTaskIdx) taskCenterIdx += 1;
+
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-night-950">
       <Head>
@@ -271,7 +304,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         <div className="container-x flex items-center justify-between py-4">
           <a href="/" className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-purple-600 shadow-glow">
-              <svg className="h-4.5 w-4.5 h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+              <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
                 <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </span>
@@ -281,17 +314,37 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
           </a>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <a href="/" className="btn-ghost !py-2 !text-xs">Create your own</a>
+            <a href="/#generator" className="btn-ghost !py-2 !text-xs">Create your own</a>
           </div>
         </div>
       </div>
 
-      {/* banner / header */}
-      <div className={`relative flex min-h-[38vh] items-end bg-gradient-to-br ${th.header} bg-cover bg-center pb-12 pt-16`}>
-        <div className="absolute inset-0 bg-grid opacity-20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-night-950/30 to-transparent" />
+      {/* hero header — home-style animated background */}
+      <div className={`relative flex min-h-[42vh] items-end overflow-hidden bg-gradient-to-br ${th.header} pb-16 pt-24`}>
+        {/* animated accents (same look as the home hero) */}
+        <div className="absolute inset-0 bg-grid opacity-25 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
+        <div className="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-brand-400/25 blur-3xl dark:bg-brand-600/20" />
+        <div className="absolute right-[6%] top-1/3 h-56 w-56 rounded-full bg-purple-400/20 blur-3xl dark:bg-purple-600/15" />
+        <div className="absolute inset-0 bg-gradient-to-t from-night-950/60 via-night-950/15 to-night-950/10" />
+
+        {/* floating accents */}
+        <div className="pointer-events-none absolute left-[6%] top-24 hidden h-12 w-12 animate-float rounded-2xl border border-white/30 bg-white/10 backdrop-blur lg:block">
+          <span className="flex h-full w-full items-center justify-center text-lg">🔒</span>
+        </div>
+        <div className="pointer-events-none absolute right-[8%] top-16 hidden h-12 w-12 animate-float rounded-2xl border border-white/30 bg-white/10 backdrop-blur [animation-delay:1.2s] lg:block">
+          <span className="flex h-full w-full items-center justify-center text-lg">⚡</span>
+        </div>
+
         <div className="container-x relative w-full">
           <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+            <span className="chip border-white/25 bg-white/10 text-white shadow-sm backdrop-blur">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
+              Reward in {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
+            </span>
+
             {parseVideoUrl(link.video_url || "") && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -300,24 +353,27 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
                 className="mb-4 h-40 w-64 rounded-2xl object-cover shadow-lg ring-4 ring-white/30"
               />
             )}
-            {link.icon_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={link.icon_url} alt="" className="h-20 w-20 rounded-2xl object-cover shadow-lg ring-4 ring-white/30" />
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/15 shadow-lg ring-4 ring-white/30 backdrop-blur">
-                <svg className="h-9 w-9 text-white" viewBox="0 0 24 24" fill="none">
-                  <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-            )}
+            <div className="relative mt-4">
+              <div className="absolute -inset-3 -z-10 rounded-3xl bg-white/20 blur-xl" />
+              {link.icon_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={link.icon_url} alt="" className="h-20 w-20 rounded-2xl object-cover shadow-lg ring-4 ring-white/30" />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/15 shadow-lg ring-4 ring-white/30 backdrop-blur">
+                  <svg className="h-9 w-9 text-white" viewBox="0 0 24 24" fill="none">
+                    <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </div>
+              )}
+            </div>
             <h1 className="mt-4 font-display text-3xl font-extrabold text-white drop-shadow sm:text-4xl">{link.title}</h1>
-            {link.description && <p className="mt-3 max-w-xl text-brand-100">{link.description}</p>}
+            {link.description && <p className="mt-3 max-w-xl text-white/90">{link.description}</p>}
           </div>
         </div>
       </div>
 
       {/* content */}
-      <div className={`container-x -mt-12 ${ads.bottom.length > 0 && !bottomBarClosed ? "pb-36" : "pb-20"}`}>
+      <div className={`container-x -mt-12 ${ads.social.length > 0 && !bottomBarClosed ? "pb-36" : "pb-20"}`}>
         {/* banner ad — below the hero, above the task card */}
         {ads.banner.length > 0 && (
           <div className="mx-auto mb-4 max-w-2xl">
@@ -325,12 +381,24 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
           </div>
         )}
 
-        <div className="card mx-auto max-w-2xl !rounded-3xl p-6 sm:p-8 dark:border-night-700 dark:bg-night-900/80 dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
+        <div className="card relative mx-auto max-w-2xl overflow-hidden !rounded-3xl p-6 sm:p-8 dark:border-night-700 dark:bg-night-900/80 dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
+          {/* shine sweep (home-hero style) */}
+          <div className="pointer-events-none absolute inset-0 -translate-x-full overflow-hidden bg-gradient-to-r from-transparent via-white/5 to-transparent">
+            <div className="h-full w-full animate-shimmer" />
+          </div>
+
           {/* progress */}
-          <div className="mb-6 rounded-2xl border border-slate-100 bg-slate-50/70 p-4 dark:border-night-700 dark:bg-night-800/50">
-            <div className="mb-2 flex items-center justify-between text-sm">
-              <span className="font-semibold text-slate-700 dark:text-slate-300">Complete all tasks to unlock</span>
-              <span className="font-bold text-brand-600 dark:text-brand-400">{completed.size}/{tasks.length} done</span>
+          <div className="mb-6 overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-5 dark:border-night-700 dark:from-night-800/60 dark:to-night-800/30">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <span className="block text-base font-bold text-slate-800 dark:text-slate-100">Complete all tasks to unlock</span>
+                <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                  Tap each task below, finish it in the new tab, then claim your reward
+                </span>
+              </div>
+              <span className="shrink-0 rounded-full bg-brand-50 px-3 py-1.5 text-sm font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+                {completed.size}/{tasks.length}
+              </span>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-night-700">
               <div
@@ -374,7 +442,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
                           <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                         </svg>
                       ) : (
-                        <BrandIcon brand={opt?.brand || "custom"} className="h-5.5 w-5.5 h-5 w-5" />
+                        <BrandIcon brand={opt?.brand || "custom"} className="h-5 w-5" />
                       )}
                       <span className="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-600 shadow dark:bg-night-700 dark:text-slate-300">
                         {i + 1}
@@ -411,15 +479,28 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
                   </button>
                 </li>
                 {/* in-task ad — placed after the 2nd task (or at the end for short lists) */}
-                {ads.task.length > 0 && i === Math.min(1, tasks.length - 1) && (
+                {ads.task.length > 0 && i === inlineTaskIdx && (
                   <li>
                     <InlineAd ad={ads.task[0]} />
+                  </li>
+                )}
+                {/* task-center ad — placed in the middle of the task list */}
+                {ads.task_center.length > 0 && i === taskCenterIdx && (
+                  <li>
+                    <BoxAd ad={ads.task_center[0]} />
                   </li>
                 )}
                 </Fragment>
               );
             })}
           </ul>
+
+          {/* above-unlock ad — right above the unlock button */}
+          {ads.above_unlock.length > 0 && (
+            <div className="mt-5">
+              <BoxAd ad={ads.above_unlock[0]} />
+            </div>
+          )}
 
           {/* reward area */}
           <div className="mt-6">
@@ -493,9 +574,19 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
             )}
           </div>
 
-          <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
-            Powered by <span className="font-semibold text-slate-500 dark:text-slate-300">UNLOCKFLOW</span>
-          </p>
+          {/* powered-by — UNLOCKFLOW is a real button that opens the link generator */}
+          <div className="mt-6 flex items-center justify-center gap-1.5">
+            <span className="text-xs text-slate-400 dark:text-slate-500">Powered by</span>
+            <a
+              href="/#generator"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-glow transition hover:from-brand-700 hover:to-purple-700 active:scale-[0.97]"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              UNLOCK<span className="opacity-90">FLOW</span>
+            </a>
+          </div>
         </div>
 
         {/* How to unlock guide — below the tasks */}
@@ -521,11 +612,52 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
             ))}
           </ol>
         </div>
+
+        {/* FAQ — below the task section, with its own ad placement */}
+        <div className="card mx-auto max-w-2xl overflow-hidden !rounded-2xl dark:border-night-700 dark:bg-night-900/80">
+          <div className="flex items-center justify-between px-5 py-4">
+            <div>
+              <h3 className="font-display text-base font-bold text-slate-800 dark:text-slate-100">Frequently asked questions</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Quick answers about unlocking this content</p>
+            </div>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 font-display text-base font-bold text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+              ?
+            </span>
+          </div>
+          <div className="space-y-2 px-4 pb-4">
+            {UNLOCK_FAQS.map((f, i) => (
+              <div key={i}>
+                <button
+                  onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                  className="flex w-full items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3 text-left transition hover:border-brand-200 dark:border-night-700 dark:bg-night-800/40 dark:hover:border-brand-500/40"
+                >
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{f.q}</span>
+                  <svg
+                    className={`h-4 w-4 shrink-0 text-brand-600 transition dark:text-brand-400 ${faqOpen === i ? "rotate-180" : ""}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                {faqOpen === i && (
+                  <div className="px-4 pb-1 pt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{f.a}</div>
+                )}
+                {/* FAQ ad placement — inside the FAQ section */}
+                {i === 0 && ads.faq.length > 0 && (
+                  <div className="pt-2">
+                    <BoxAd ad={ads.faq[0]} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* fixed bottom social bar ad */}
-      {ads.bottom.length > 0 && !bottomBarClosed && (
-        <BottomAdBar ad={ads.bottom[0]} onClose={() => setBottomBarClosed(true)} />
+      {ads.social.length > 0 && !bottomBarClosed && (
+        <SocialAdBar ad={ads.social[0]} onClose={() => setBottomBarClosed(true)} />
       )}
     </div>
   );

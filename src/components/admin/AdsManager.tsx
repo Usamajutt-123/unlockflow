@@ -47,7 +47,10 @@ export default function AdsManager({ token, auth }: Props) {
     const styles: Record<AdSlot, string> = {
       banner: "bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300",
       task: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",
-      bottom: "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",
+      task_center: "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300",
+      above_unlock: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+      faq: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+      social: "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",
     };
     return (
       <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles[slot]}`}>
@@ -62,7 +65,8 @@ export default function AdsManager({ token, auth }: Props) {
         <div>
           <h2 className="font-display text-xl font-bold text-ink dark:text-white">Ads</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Ads shown on unlock pages — banner (below hero), inside the task list, and the fixed bottom bar.
+            Control every ad on unlock pages. Paste Adsterra / Monetag script codes (or use an image banner) and place
+            it in any slot — turn each one on or off anytime.
           </p>
         </div>
         <button onClick={() => setEditing({} as Ad)} className="btn-primary !py-2 !text-xs">
@@ -99,7 +103,9 @@ export default function AdsManager({ token, auth }: Props) {
         <div className="space-y-3">
           {ads.map((ad) => (
             <div key={ad.id} className="card flex flex-wrap items-center gap-3 p-4 dark:border-night-700 dark:bg-night-900">
-              {ad.image_url ? (
+              {ad.type === "script" ? (
+                <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-50 text-xl dark:bg-cyan-500/10">🧩</span>
+              ) : ad.image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={ad.image_url} alt="" className="h-12 w-12 rounded-lg object-cover" />
               ) : (
@@ -107,11 +113,20 @@ export default function AdsManager({ token, auth }: Props) {
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate font-semibold text-slate-800 dark:text-slate-100">{ad.title || "Untitled ad"}</span>
+                  <span className="truncate font-semibold text-slate-800 dark:text-slate-100">
+                    {ad.type === "script" ? (ad.title || "Script ad") : ad.title || "Untitled ad"}
+                  </span>
                   {slotBadge(ad.slot)}
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${ad.type === "script" ? "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300" : "bg-slate-100 text-slate-500 dark:bg-night-700 dark:text-slate-300"}`}>
+                    {ad.type === "script" ? "script" : "image"}
+                  </span>
                   {!ad.active && <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-night-700 dark:text-slate-300">off</span>}
                 </div>
-                {ad.link_url && <div className="truncate text-xs text-slate-400">{ad.link_url}</div>}
+                {ad.type === "script" ? (
+                  <div className="truncate text-xs text-slate-400">{ad.script ? `${ad.script.length} chars of code` : "No script"}</div>
+                ) : (
+                  ad.link_url && <div className="truncate text-xs text-slate-400">{ad.link_url}</div>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => toggle(ad)} className="btn-ghost !py-1.5 !text-xs">{ad.active ? "Deactivate" : "Activate"}</button>
@@ -135,6 +150,8 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
     title: props.initial.title || "",
     image_url: props.initial.image_url || "",
     link_url: props.initial.link_url || "",
+    type: props.initial.type || "image",
+    script: props.initial.script || "",
     active: props.initial.active ?? true,
     created_at: props.initial.created_at || "",
   }));
@@ -144,7 +161,9 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
   const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async () => {
-    if (!form.title.trim() && !form.image_url.trim()) {
+    if (form.type === "script") {
+      if (!form.script.trim()) { setErr("Paste your ad network script code"); return; }
+    } else if (!form.title.trim() && !form.image_url.trim()) {
       setErr("Add a title or an image URL");
       return;
     }
@@ -153,7 +172,10 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
     const r = await fetch(isNew ? "/api/admin/ads" : `/api/admin/ads/${form.id}`, {
       method: isNew ? "POST" : "PATCH",
       headers: { ...props.auth, "content-type": "application/json" },
-      body: JSON.stringify({ slot: form.slot, title: form.title, image_url: form.image_url, link_url: form.link_url, active: form.active }),
+      body: JSON.stringify({
+        slot: form.slot, title: form.title, image_url: form.image_url,
+        link_url: form.link_url, type: form.type, script: form.script, active: form.active,
+      }),
     });
     const j = await r.json();
     setBusy(false);
@@ -163,7 +185,7 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/60 p-4 backdrop-blur-sm" onClick={props.onClose}>
-      <div className="card w-full max-w-lg p-6 dark:border-night-700 dark:bg-night-900" onClick={(e) => e.stopPropagation()}>
+      <div className="card max-h-[90vh] w-full max-w-lg overflow-y-auto p-6 dark:border-night-700 dark:bg-night-900" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-lg font-bold text-ink dark:text-white">{form.id ? "Edit Ad" : "New Ad"}</h3>
           <button onClick={props.onClose} className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600">
@@ -180,9 +202,60 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
               {AD_SLOTS.map((s) => <option key={s} value={s}>{AD_SLOT_LABELS[s]}</option>)}
             </select>
           </div>
-          <div><label className="label">Ad title</label><input value={form.title} onChange={(e) => set("title", e.target.value)} className="field" placeholder="e.g. Check out our sponsor" /></div>
-          <div><label className="label">Image URL (optional)</label><input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} className="field" placeholder="https://…/banner.jpg" /></div>
-          <div><label className="label">Link URL (optional)</label><input value={form.link_url} onChange={(e) => set("link_url", e.target.value)} className="field" placeholder="https://…" /></div>
+
+          <div>
+            <label className="label">Ad type *</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => set("type", "script")}
+                className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                  form.type === "script"
+                    ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300"
+                    : "border-slate-200 text-slate-600 dark:border-night-700 dark:text-slate-300"
+                }`}
+              >
+                🧩 Script (Adsterra / Monetag)
+              </button>
+              <button
+                type="button"
+                onClick={() => set("type", "image")}
+                className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                  form.type === "image"
+                    ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300"
+                    : "border-slate-200 text-slate-600 dark:border-night-700 dark:text-slate-300"
+                }`}
+              >
+                🖼 Image banner
+              </button>
+            </div>
+          </div>
+
+          {form.type === "script" ? (
+            <div>
+              <label className="label">Ad script code *</label>
+              <textarea
+                value={form.script}
+                onChange={(e) => set("script", e.target.value)}
+                className="field min-h-[140px] font-mono !text-xs"
+                placeholder={'<script type="text/javascript" src="https://…"></script>'}
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                Paste the full ad code from Adsterra, Monetag, or any network. It will render live on the unlock page.
+              </p>
+              <div className="mt-2">
+                <label className="label">Label (optional)</label>
+                <input value={form.title} onChange={(e) => set("title", e.target.value)} className="field" placeholder="e.g. Adsterra banner" />
+              </div>
+            </div>
+          ) : (
+            <>
+              <div><label className="label">Ad title</label><input value={form.title} onChange={(e) => set("title", e.target.value)} className="field" placeholder="e.g. Check out our sponsor" /></div>
+              <div><label className="label">Image URL (optional)</label><input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} className="field" placeholder="https://…/banner.jpg" /></div>
+              <div><label className="label">Link URL (optional)</label><input value={form.link_url} onChange={(e) => set("link_url", e.target.value)} className="field" placeholder="https://…" /></div>
+            </>
+          )}
+
           <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300">
             <input type="checkbox" checked={form.active} onChange={(e) => set("active", e.target.checked)} className="h-4 w-4" />
             Active

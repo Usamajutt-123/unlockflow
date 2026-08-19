@@ -24,6 +24,8 @@ export async function GET() {
     title: a.title || "",
     image_url: a.image_url || "",
     link_url: a.link_url || "",
+    type: a.type || "image",
+    script: a.script || "",
     active: a.active,
     created_at: a.created_at,
   }));
