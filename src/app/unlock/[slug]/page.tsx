@@ -210,7 +210,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
 
   if (loading) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center bg-slate-50 dark:bg-night-950">
+      <div className="relative flex min-h-screen items-center justify-center">
         <Background />
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600 dark:border-night-700 dark:border-t-brand-400" />
@@ -222,7 +222,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
 
   if (expired) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <Background />
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
           <svg className="h-8 w-8 text-amber-500" viewBox="0 0 24 24" fill="none">
@@ -243,7 +243,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
 
   if (inactive) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <Background />
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-night-800">
           <svg className="h-8 w-8 text-slate-500 dark:text-slate-400" viewBox="0 0 24 24" fill="none">
@@ -261,7 +261,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
 
   if (notFound || !link) {
     return (
-      <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <Background />
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50">
           <svg className="h-8 w-8 text-red-500" viewBox="0 0 24 24" fill="none">
@@ -289,7 +289,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   if (ads.task.length > 0 && taskCenterIdx === inlineTaskIdx) taskCenterIdx += 1;
 
   return (
-    <div className="relative min-h-screen bg-slate-50 dark:bg-night-950">
+    <div className="relative min-h-screen">
       <Head>
         <title>{link.title} | UNLOCKFLOW</title>
         <meta name="description" content={link.description || "Complete the tasks to unlock your reward."} />
