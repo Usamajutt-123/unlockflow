@@ -16,15 +16,19 @@ export default function Logo({
 }: LogoProps) {
   return (
     <span className="flex items-center gap-2.5">
-      <Image
-        src="/logo.webp"
-        alt="UNLOCKFLOW logo"
-        width={256}
-        height={256}
-        priority
-        unoptimized
-        className={`${className} object-contain drop-shadow`}
-      />
+      <span
+        className={`${className} inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-0.5 shadow-sm ring-1 ring-slate-200/80 dark:bg-night-800 dark:ring-night-700`}
+      >
+        <Image
+          src="/logo.webp"
+          alt="UNLOCKFLOW logo"
+          width={256}
+          height={256}
+          priority
+          unoptimized
+          className="h-full w-full object-contain"
+        />
+      </span>
       {showText && (
         <span
           className={`font-display ${textClassName} font-extrabold tracking-tight text-ink dark:text-white`}
