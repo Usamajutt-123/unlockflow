@@ -92,9 +92,8 @@ export default function Hero() {
                   className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-night-700 dark:bg-night-800/50"
                 >
                   <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                      state === "done" ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-slate-100 dark:bg-night-700"
-                    }`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg ${state === "done" ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-slate-100 dark:bg-night-700"
+                      }`}
                   >
                     {brand === "youtube" && (
                       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="#FF0000">
