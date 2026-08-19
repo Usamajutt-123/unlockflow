@@ -245,9 +245,9 @@ export default function LinkGenerator() {
           </p>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-6xl items-start gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="mx-auto mt-12 grid min-w-0 max-w-6xl items-start gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             {/* generator card */}
-            <div className="card overflow-hidden !rounded-3xl dark:border-night-700 dark:bg-night-900/70 dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
+            <div className="card min-w-0 overflow-hidden !rounded-3xl dark:border-night-700 dark:bg-night-900/70 dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
             {/* Step 1 */}
             <div className="border-b border-slate-100 px-6 py-6 sm:px-8 dark:border-night-700">
               <div className="flex items-center gap-3">
@@ -386,8 +386,8 @@ export default function LinkGenerator() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white dark:bg-brand-500">2</span>
                 <h3 className="font-display text-lg font-bold text-ink dark:text-white">Destination link (reward)</h3>
               </div>
-              <div className="mt-5">
-                <div className="relative group">
+              <div className="mt-5 min-w-0 max-w-full">
+                <div className="relative min-w-0 max-w-full group">
                   <span className="pointer-events-none absolute left-3.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg bg-brand-50 text-brand-600 transition group-focus-within:bg-brand-600 group-focus-within:text-white dark:bg-night-700 dark:text-brand-300 dark:group-focus-within:bg-brand-500 dark:group-focus-within:text-white">
                     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
                       <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -397,7 +397,7 @@ export default function LinkGenerator() {
                     value={destinationUrl}
                     onChange={(e) => setDestinationUrl(e.target.value)}
                     placeholder="https://your-reward.com — the link users unlock"
-                    className="field pl-[3.6rem] !py-3"
+                    className="field min-w-0 max-w-full pl-[3.6rem] !py-3"
                   />
                 </div>
               </div>
@@ -672,7 +672,7 @@ export default function LinkGenerator() {
             </div>
 
             {/* Live preview */}
-            <div className="card sticky top-20 !rounded-3xl p-4 dark:border-night-700 dark:bg-night-900/70">
+            <div className="card sticky top-20 min-w-0 max-w-full overflow-hidden !rounded-3xl p-4 dark:border-night-700 dark:bg-night-900/70">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="relative flex h-2 w-2">

@@ -31,7 +31,7 @@ export default function UnlockPreview({ title, description, iconUrl, destination
   const showReward = previewTasks.length > 0 && destinationUrl.trim() !== "";
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card dark:border-night-700 dark:bg-night-900">
+    <div className="relative min-w-0 max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card dark:border-night-700 dark:bg-night-900">
       {/* header */}
       <div className={`relative flex items-end bg-gradient-to-br ${th.header} px-5 pb-5 pt-8`}>
         <div className="absolute inset-0 bg-grid opacity-20" />
@@ -122,7 +122,7 @@ export default function UnlockPreview({ title, description, iconUrl, destination
         </button>
 
         {showReward && (
-          <p className="mt-2 truncate text-center text-[11px] text-emerald-600 dark:text-emerald-400">
+          <p className="mt-2 block w-full min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-[11px] text-emerald-600 dark:text-emerald-400">
             Destination: {destinationUrl}
           </p>
         )}
