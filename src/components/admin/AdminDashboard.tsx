@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { getTaskOption, hashPassword } from "@/lib/tasks";
 import { BrandIcon } from "../brandIcons";
+import Logo from "../Logo";
 import { THEMES } from "@/lib/themes";
 import dynamic from "next/dynamic";
 
@@ -169,15 +170,8 @@ export default function AdminDashboard({ session }: { session: Session }) {
       <header className="glass sticky top-0 z-30 border-b border-slate-200 dark:border-night-700">
         <div className="container-x flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-purple-600">
-              <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </span>
-            <span className="font-display text-lg font-extrabold text-ink dark:text-white">
-              UNLOCK<span className="text-brand-600 dark:text-brand-400">FLOW</span>{" "}
-              <span className="rounded-md bg-brand-100 px-1.5 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">Admin</span>
-            </span>
+            <Logo />
+            <span className="rounded-md bg-brand-100 px-1.5 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">Admin</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-slate-500 sm:block dark:text-slate-400">{session.user.email}</span>
