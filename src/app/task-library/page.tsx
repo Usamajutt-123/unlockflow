@@ -1,3 +1,9 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Task Library",
+  description: "20+ smart tasks across every major platform to help your audience engage and unlock their reward.",
+};
 import PageShell from "@/components/PageShell";
 import { Section, P, List, Cards } from "@/components/InfoContent";
 

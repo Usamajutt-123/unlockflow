@@ -1,3 +1,9 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Careers",
+  description: "Join us in building the future of creator engagement.",
+};
 import PageShell from "@/components/PageShell";
 import { Section, P, Cards } from "@/components/InfoContent";
 

@@ -1,3 +1,9 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Advanced Options",
+  description: "All the power you need to craft a unique, premium unlock page — fully optional and easy to use.",
+};
 import PageShell from "@/components/PageShell";
 import { Section, P, List, Cards } from "@/components/InfoContent";
 

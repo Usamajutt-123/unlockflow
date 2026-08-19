@@ -1,3 +1,9 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "QR Codes",
+  description: "Every unlock link comes with a beautiful, scannable QR code — shareable anywhere, online or offline.",
+};
 import PageShell from "@/components/PageShell";
 import { Section, P, List, Cards } from "@/components/InfoContent";
 

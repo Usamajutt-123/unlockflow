@@ -1,3 +1,9 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Changelog",
+  description: "What's new in UNLOCKFLOW — recent updates and improvements.",
+};
 import PageShell from "@/components/PageShell";
 import { Section, P } from "@/components/InfoContent";
 

@@ -1,3 +1,9 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Help Center",
+  description: "Quick answers to the most common questions about UNLOCKFLOW.",
+};
 import PageShell from "@/components/PageShell";
 import { Section, P, List } from "@/components/InfoContent";
 

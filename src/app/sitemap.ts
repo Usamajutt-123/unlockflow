@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const base = "https://unlockflow.vercel.app";
+const base = process.env.NEXT_PUBLIC_SITE_URL || "https://unlockflow.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [

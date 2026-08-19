@@ -5,9 +5,20 @@ import { supabase } from "@/lib/supabase";
 import { getTaskOption, hashPassword } from "@/lib/tasks";
 import { BrandIcon } from "../brandIcons";
 import { THEMES } from "@/lib/themes";
-import {
-  BarChart, Bar, LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend, AreaChart, Area,
-} from "recharts";
+import dynamic from "next/dynamic";
+
+const AreaChart = dynamic(() => import("recharts").then((m) => m.AreaChart), { ssr: false });
+const Area = dynamic(() => import("recharts").then((m) => m.Area), { ssr: false });
+const BarChart = dynamic(() => import("recharts").then((m) => m.BarChart), { ssr: false });
+const Bar = dynamic(() => import("recharts").then((m) => m.Bar), { ssr: false });
+const LineChart = dynamic(() => import("recharts").then((m) => m.LineChart), { ssr: false });
+const Line = dynamic(() => import("recharts").then((m) => m.Line), { ssr: false });
+const ResponsiveContainer = dynamic(() => import("recharts").then((m) => m.ResponsiveContainer), { ssr: false });
+const XAxis = dynamic(() => import("recharts").then((m) => m.XAxis), { ssr: false });
+const YAxis = dynamic(() => import("recharts").then((m) => m.YAxis), { ssr: false });
+const Tooltip = dynamic(() => import("recharts").then((m) => m.Tooltip), { ssr: false });
+const CartesianGrid = dynamic(() => import("recharts").then((m) => m.CartesianGrid), { ssr: false });
+const Legend = dynamic(() => import("recharts").then((m) => m.Legend), { ssr: false });
 import StatsCards from "./StatsCards";
 import BlogManager from "./BlogManager";
 import AdsManager from "./AdsManager";
@@ -217,7 +228,7 @@ export default function AdminDashboard({ session }: { session: Session }) {
                     <p className="mb-3 text-xs text-slate-400">Tasks completed across all links</p>
                     <ResponsiveContainer width="100%" height={220}>
                       <AreaChart data={series}>
-                        <defs><linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3370ff" stopOpacity={0.5}/><stop offset="100%" stopColor="#3370ff" stopOpacity={0}/></linearGradient></defs>
+                        <defs><linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3370ff" stopOpacity={0.5} /><stop offset="100%" stopColor="#3370ff" stopOpacity={0} /></linearGradient></defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
                         <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} />
                         <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
@@ -254,7 +265,7 @@ export default function AdminDashboard({ session }: { session: Session }) {
                       {completions.slice(0, 8).map((c) => (
                         <li key={c.id} className="flex items-center gap-3 py-2.5">
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                           </span>
                           <div className="min-w-0 flex-1">
                             <span className="text-sm font-medium text-slate-700 dark:text-slate-200">+{c.completions} on /unlock/{c.slug}</span>
@@ -332,11 +343,11 @@ function LinksView(props: {
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/><path d="m21 21-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" /><path d="m21 21-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search links…" className="field !w-56 !py-2 pl-9 text-xs" />
           </div>
           <button onClick={() => setShowCreate(true)} className="btn-primary !py-2 !text-xs">
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
             Create Link
           </button>
         </div>
@@ -416,7 +427,7 @@ function LinkCard(props: {
           <button onClick={props.onEdit} className="btn-ghost !py-1.5 !text-xs">Edit</button>
           <button onClick={() => setOpen(!open)} className="btn-ghost !py-1.5 !text-xs">{open ? "Close" : "Tasks"}</button>
           <button onClick={() => props.deleteLink(link.id)} className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10">
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 13a1 1 0 0 0 1 .8h8a1 1 0 0 0 1-.8L18 7M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 13a1 1 0 0 0 1 .8h8a1 1 0 0 0 1-.8L18 7M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
       </div>
@@ -438,9 +449,9 @@ function LinkCard(props: {
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700 dark:text-slate-200">{t.label}</span>
                   <span className="hidden max-w-[40%] truncate text-xs text-slate-400 sm:block">{t.task_url}</span>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => props.moveTask(link.id, t.id, -1)} disabled={i === 0} className="rounded p-1 text-slate-400 hover:text-brand-600 disabled:opacity-30"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="m18 15-6-6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
-                    <button onClick={() => props.moveTask(link.id, t.id, 1)} disabled={i === tasks.length - 1} className="rounded p-1 text-slate-400 hover:text-brand-600 disabled:opacity-30"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
-                    <button onClick={() => props.deleteTask(link.id, t.id)} className="rounded p-1 text-slate-400 hover:text-red-500"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg></button>
+                    <button onClick={() => props.moveTask(link.id, t.id, -1)} disabled={i === 0} className="rounded p-1 text-slate-400 hover:text-brand-600 disabled:opacity-30"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="m18 15-6-6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+                    <button onClick={() => props.moveTask(link.id, t.id, 1)} disabled={i === tasks.length - 1} className="rounded p-1 text-slate-400 hover:text-brand-600 disabled:opacity-30"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+                    <button onClick={() => props.deleteTask(link.id, t.id)} className="rounded p-1 text-slate-400 hover:text-red-500"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></button>
                   </div>
                 </li>
               );
@@ -485,7 +496,7 @@ function CreateLinkModal(props: { auth: any; token: string; onClose: () => void;
       <div className="card w-full max-w-lg p-6 dark:border-night-700 dark:bg-night-900" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-lg font-bold text-ink dark:text-white">Create Link</h3>
-          <button onClick={props.onClose} className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600"><svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg></button>
+          <button onClick={props.onClose} className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600"><svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></button>
         </div>
         <div className="space-y-3">
           <div><label className="label">Destination URL *</label>
@@ -537,7 +548,7 @@ function EditLinkModal(props: { link: LinkRow; auth: any; token: string; onClose
       <div className="card max-h-[90vh] w-full max-w-lg overflow-y-auto p-6 dark:border-night-700 dark:bg-night-900" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-display text-lg font-bold text-ink dark:text-white">Edit Link</h3>
-          <button onClick={props.onClose} className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600"><svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg></button>
+          <button onClick={props.onClose} className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600"><svg className="h-5 w-5" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></button>
         </div>
         <div className="space-y-3">
           <div><label className="label">Title</label><input value={form.title} onChange={(e) => set("title", e.target.value)} className="field" /></div>
@@ -554,11 +565,10 @@ function EditLinkModal(props: { link: LinkRow; auth: any; token: string; onClose
                   key={t.id}
                   type="button"
                   onClick={() => set("theme", t.id)}
-                  className={`flex items-center gap-1.5 rounded-lg border p-2 text-left transition ${
-                    (form.theme || "midnight") === t.id
+                  className={`flex items-center gap-1.5 rounded-lg border p-2 text-left transition ${(form.theme || "midnight") === t.id
                       ? "border-brand-500 bg-brand-50 dark:bg-brand-500/10"
                       : "border-slate-200 dark:border-night-700"
-                  }`}
+                    }`}
                 >
                   <span className="h-5 w-5 shrink-0 rounded-full" style={{ background: `linear-gradient(135deg, ${t.swatch[0]}, ${t.swatch[1]})` }} />
                   <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{t.label}</span>

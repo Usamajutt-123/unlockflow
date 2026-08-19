@@ -1,3 +1,9 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Analytics",
+  description: "Understand how your unlock links perform and turn engagement into insight.",
+};
 import PageShell from "@/components/PageShell";
 import { Section, P, List, Cards } from "@/components/InfoContent";
 
