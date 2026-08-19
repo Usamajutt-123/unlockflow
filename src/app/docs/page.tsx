@@ -1,5 +1,17 @@
+import type { Metadata } from "next";
 import PageShell from "@/components/PageShell";
 import { Section, P, List, Cards } from "@/components/InfoContent";
+
+export const metadata: Metadata = {
+  title: "Documentation",
+  description:
+    "Everything you need to know to get the most out of UNLOCKFLOW — quick start, adding tasks, password protection, expiry dates, and configuration.",
+  openGraph: {
+    title: "UNLOCKFLOW Documentation",
+    description:
+      "Quick start guide, tasks, password protection, expiry dates, and configuration for your unlock links.",
+  },
+};
 
 export default function DocsPage() {
   return (

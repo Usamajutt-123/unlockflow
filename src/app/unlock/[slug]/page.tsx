@@ -16,6 +16,8 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const [inactive, setInactive] = useState(false);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
   const [rewardOpen, setRewardOpen] = useState(false);
   const [passValue, setPassValue] = useState("");
@@ -24,6 +26,32 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const [processing, setProcessing] = useState<{ idx: number; phase: "open" | "confirm" } | null>(null);
 
   const storageKey = `uf_done_${slug}`;
+
+  // Analytics tracking: tries the record_event RPC (migration 0003), and if that
+  // fails (e.g. RPC not created yet), falls back to a direct counter update on
+  // links (migration 0001 allows anon updates). Errors are logged — not swallowed.
+  const trackEvent = async (
+    event: "view" | "click" | "complete",
+    linkId?: string,
+    currentValue = 0
+  ) => {
+    if (!isSupabaseConfigured || !linkId) return;
+    try {
+      const { error } = await supabase.rpc("record_event", { p_slug: slug, p_event: event });
+      if (error) {
+        console.warn(`[unlockflow] record_event RPC failed (${event}):`, error.message);
+        // Fallback: bump the counter directly on the links row.
+        const col = event === "view" ? "views" : event === "click" ? "clicks" : "completions";
+        const res = await supabase
+          .from("links")
+          .update({ [col]: (Number(currentValue) || 0) + 1 })
+          .eq("id", linkId);
+        if (res.error) console.warn(`[unlockflow] fallback counter update failed (${col}):`, res.error.message);
+      }
+    } catch (err) {
+      console.warn(`[unlockflow] analytics tracking failed (${event}):`, err);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -44,20 +72,20 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         return;
       }
 
-      // expiry check
+      // expiry check — show a dedicated "expired" page instead of "not found"
       if (data.expiry_date && new Date(data.expiry_date).getTime() < Date.now()) {
-        setNotFound(true);
+        setExpired(true);
         setLoading(false);
         return;
       }
       if (data.active === false) {
-        setNotFound(true);
+        setInactive(true);
         setLoading(false);
         return;
       }
 
-      // track a view (best effort)
-      (async () => { await supabase.rpc("record_event", { p_slug: slug, p_event: "view" }); })().catch(() => {});
+      // track a view (best effort, with fallback + logging)
+      trackEvent("view", data.id, data.views || 0);
 
       const ordered = [...(data.tasks || [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
       setLink(data);
@@ -88,8 +116,8 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
     setTimeout(() => {
       // open the link on the SAME link the creator provided
       window.open(t.task_url, "_blank", "noopener");
-      // track a click (best effort)
-      (async () => { await supabase.rpc("record_event", { p_slug: slug, p_event: "click" }); })().catch(() => {});
+      // track a click (best effort, with fallback + logging)
+      trackEvent("click", link?.id, link?.clicks || 0);
 
       // Phase 2: "Confirming..." loading (0.6s), then mark task complete
       setProcessing({ idx, phase: "confirm" });
@@ -110,9 +138,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   // when all done, record completion (compact counter, no unbounded rows)
   useEffect(() => {
     if (!allDone || !link?.id || !isSupabaseConfigured) return;
-    (async () => {
-      await supabase.rpc("record_event", { p_slug: slug, p_event: "complete" });
-    })().catch(() => {});
+    trackEvent("complete", link.id, link?.completions || 0);
   }, [allDone, link?.id, slug]);
 
   const openReward = async () => {
@@ -151,6 +177,45 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
     );
   }
 
+  if (expired) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
+        <Background />
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
+          <svg className="h-8 w-8 text-amber-500" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+            <path d="M12 7v5m0 3v.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M5 5l14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+          </svg>
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-extrabold text-ink dark:text-white">Link has expired</h1>
+        <p className="mt-2 max-w-sm text-slate-500 dark:text-slate-400">
+          Sorry — this unlock link is no longer available. The creator set an expiry date and it has passed.
+        </p>
+        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">If you were expecting this link to work, please contact the creator.</p>
+        <a href="/" className="btn-primary mt-6">Go to UNLOCKFLOW</a>
+      </div>
+    );
+  }
+
+  if (inactive) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
+        <Background />
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-night-800">
+          <svg className="h-8 w-8 text-slate-500 dark:text-slate-400" viewBox="0 0 24 24" fill="none">
+            <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-extrabold text-ink dark:text-white">Link unavailable</h1>
+        <p className="mt-2 max-w-sm text-slate-500 dark:text-slate-400">
+          This unlock link has been turned off by its creator and is no longer accepting visitors.
+        </p>
+        <a href="/" className="btn-primary mt-6">Go to UNLOCKFLOW</a>
+      </div>
+    );
+  }
+
   if (notFound || !link) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
@@ -162,7 +227,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         </div>
         <h1 className="mt-5 font-display text-2xl font-extrabold text-ink dark:text-white">Link not found</h1>
         <p className="mt-2 text-slate-500 dark:text-slate-400">
-          This unlock link is invalid, has expired, or Supabase isn't configured.
+          This unlock link doesn't exist or isn't published yet.
         </p>
         <a href="/" className="btn-primary mt-6">Go to UNLOCKFLOW</a>
       </div>

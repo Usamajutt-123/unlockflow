@@ -22,6 +22,9 @@ export interface UnlockLink {
   expiry_date?: string | null;
   theme?: string;
   active: boolean;
+  views?: number;
+  clicks?: number;
+  completions?: number;
   created_at?: string;
   tasks?: Task[];
 }
