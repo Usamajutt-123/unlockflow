@@ -13,4 +13,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 
 # Optional: an extra admin email (besides those in the admins table)
-SUPERADMIN_EMAIL=you@example.com
+SUPERADMIN_EMAIL=kazehype407@gmail.com

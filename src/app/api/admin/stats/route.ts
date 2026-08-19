@@ -10,22 +10,40 @@ export async function GET(req: NextRequest) {
   }
   const db = supabaseAdmin;
 
-  // Pull links and sum counters client-side (service role) — no separate analytics RPC needed.
-  const { data: links, error } = await db
-    .from("links")
-    .select("views, clicks, completions");
+  // Pull links and sum counters client-side (service role).
+  // `views` + `clicks` columns come from migration 0002, `completions` from 0003.
+  // We try the full set first; if a column is missing we degrade gracefully instead of 500.
+  let rows: any[] = [];
+  let totalViews = 0, totalClicks = 0, totalCompletions = 0;
+  {
+    const r = await db.from("links").select("views, clicks, completions");
+    if (r.error) {
+      // `completions` likely missing (pre-0003) — try without it.
+      const r2 = await db.from("links").select("views, clicks");
+      if (r2.error) {
+        // `views` likely missing (pre-0002) — everything stays 0.
+        console.warn("[stats] links counters unavailable:", r2.error.message);
+      } else {
+        rows = r2.data || [];
+        totalViews = rows.reduce((s, row) => s + (Number(row.views) || 0), 0);
+        totalClicks = rows.reduce((s, row) => s + (Number(row.clicks) || 0), 0);
+      }
+    } else {
+      rows = r.data || [];
+      totalViews = rows.reduce((s, row) => s + (Number(row.views) || 0), 0);
+      totalClicks = rows.reduce((s, row) => s + (Number(row.clicks) || 0), 0);
+      totalCompletions = rows.reduce((s, row) => s + (Number(row.completions) || 0), 0);
+    }
+  }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const rows = links || [];
-  let totalViews = rows.reduce((s: number, r: any) => s + (Number(r.views) || 0), 0);
-  const totalClicks = rows.reduce((s: number, r: any) => s + (r.clicks || 0), 0);
-  const totalCompletions = rows.reduce((s: number, r: any) => s + (r.completions || 0), 0);
-
-  // If views live on daily aggregates (or links.views is not exposed), fall back to link_analytics.
+  // If views are 0 from the links table, try daily aggregates (migration 0003).
   if (totalViews === 0) {
-    const { data: daily } = await db.from("link_analytics").select("views");
-    totalViews = (daily || []).reduce((s: number, r: any) => s + (Number(r.views) || 0), 0);
+    const { data: daily, error: dailyErr } = await db.from("link_analytics").select("views");
+    if (dailyErr) {
+      console.warn("[stats] link_analytics unavailable (migration 0003 not applied?):", dailyErr.message);
+    } else {
+      totalViews = (daily || []).reduce((s, row) => s + (Number(row.views) || 0), 0);
+    }
   }
 
   // tasks count
