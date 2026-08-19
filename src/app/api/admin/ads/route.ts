@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getAdminEmail } from "@/lib/adminAuth";
 
-const SLOTS = ["banner", "task", "bottom"];
+const SLOTS = ["banner", "task", "task_center", "above_unlock", "faq", "social"];
+const TYPES = ["image", "script"];
 
 // Admin: list all ads
 export async function GET(req: NextRequest) {
@@ -27,17 +28,23 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const slot = SLOTS.includes(body.slot) ? body.slot : "banner";
+  const type = TYPES.includes(body.type) ? body.type : "image";
   const title = String(body.title || "").trim();
   const image_url = String(body.image_url || "").trim();
   const link_url = String(body.link_url || "").trim();
+  const script = String(body.script || "").trim();
 
-  if (!title && !image_url) {
+  if (type === "script") {
+    if (!script) {
+      return NextResponse.json({ error: "Paste your ad network script code" }, { status: 400 });
+    }
+  } else if (!title && !image_url) {
     return NextResponse.json({ error: "Add a title or an image URL" }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin
     .from("ads")
-    .insert({ slot, title, image_url, link_url, active: body.active !== false })
+    .insert({ slot, title, image_url, link_url, type, script, active: body.active !== false })
     .select("*")
     .single();
 
