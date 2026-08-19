@@ -1,21 +1,54 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { BlogPost } from "@/lib/types";
 
 export default function BlogSection() {
+  const sectionRef = useRef<HTMLElement>(null);
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shouldFetch, setShouldFetch] = useState(false);
 
   useEffect(() => {
-    fetch("/api/blog")
-      .then((r) => r.json())
-      .then((d) => setPosts((d.posts || []).slice(0, 3)))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const el = sectionRef.current;
+    if (!el) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setShouldFetch(true);
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldFetch(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "280px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (!shouldFetch) return;
+    let cancelled = false;
+    fetch("/api/blog")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setPosts((d.posts || []).slice(0, 3));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldFetch]);
+
   return (
-    <section id="blog" className="relative py-20 sm:py-24">
+    <section ref={sectionRef} id="blog" className="relative py-20 sm:py-24">
       <div className="container-x">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-xl">

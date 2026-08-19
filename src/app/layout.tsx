@@ -1,17 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sora } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
+const inter = localFont({
+  src: "../fonts/inter-latin-wght.woff2",
   variable: "--font-inter",
+  display: "swap",
+  weight: "100 900",
 });
 
-const sora = Sora({
-  subsets: ["latin"],
-  display: "swap",
+const sora = localFont({
+  src: "../fonts/sora-latin-wght.woff2",
   variable: "--font-sora",
+  display: "swap",
+  weight: "100 800",
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://unlockflow.vercel.app";
@@ -59,8 +61,11 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: { url: "/icon-192.png", sizes: "180x180", type: "image/png" },
   },
   manifest: "/manifest.json",
   appleWebApp: {

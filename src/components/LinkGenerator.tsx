@@ -1,15 +1,18 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
-import QRCode from "qrcode";
+import dynamic from "next/dynamic";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { TASK_OPTIONS, getTaskOption, randomSlug, hashPassword, slugify } from "@/lib/tasks";
 import type { Task, GeneratedResult } from "@/lib/types";
 import { BrandIcon } from "./brandIcons";
-import { compressIcon } from "@/lib/image";
-import UnlockPreview from "./UnlockPreview";
-import { THEMES, getTheme } from "@/lib/themes";
+import { THEMES } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
+
+const UnlockPreview = dynamic(() => import("./UnlockPreview"));
+const GeneratedQr = dynamic(() => import("./GeneratedQr"), {
+  ssr: false,
+  loading: () => <div className="h-[150px] w-[150px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-200" />,
+});
 
 interface SelectedTask extends Task {}
 
@@ -97,6 +100,7 @@ export default function LinkGenerator() {
     if (!file) return;
     try {
       // compress client-side to keep storage tiny
+      const { compressIcon } = await import("@/lib/image");
       const { blob } = await compressIcon(file);
       const url = await uploadFile(blob as File, "icon.png");
       setIconUrl(url);
@@ -184,6 +188,7 @@ export default function LinkGenerator() {
   const downloadQr = async () => {
     if (!result) return;
     try {
+      const { default: QRCode } = await import("qrcode");
       const canvas = document.createElement("canvas");
       await QRCode.toCanvas(canvas, result.fullUrl, {
         width: 512,
@@ -247,7 +252,7 @@ export default function LinkGenerator() {
 
         <div className="mx-auto mt-12 grid min-w-0 max-w-6xl items-start gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             {/* generator card */}
-            <div className="card min-w-0 overflow-hidden !rounded-3xl dark:border-night-700 dark:bg-night-900/70 dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
+            <div className="card min-w-0 overflow-hidden !rounded-3xl dark:border-night-700 dark:bg-night-900/70 md:dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
             {/* Step 1 */}
             <div className="border-b border-slate-100 px-6 py-6 sm:px-8 dark:border-night-700">
               <div className="flex items-center gap-3">
@@ -613,7 +618,7 @@ export default function LinkGenerator() {
                     <div className="flex flex-col items-center gap-5 sm:flex-row">
                       <div className="flex flex-col items-center gap-2">
                         <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-night-700 dark:bg-white">
-                          <QRCodeSVG value={result.fullUrl} size={150} bgColor="#ffffff" fgColor="#1d4ff0" level="M" />
+                          <GeneratedQr value={result.fullUrl} />
                         </div>
                         <button onClick={downloadQr} className="btn-ghost !py-2 !text-xs">
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
