@@ -71,7 +71,7 @@ export default function Hero() {
             </div>
             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-night-800">
               <div className="flex items-center gap-3">
-                <Image src="/logo.png" alt="" width={34} height={34} unoptimized className="rounded-lg" />
+                <Image src="/logo.webp" alt="" width={34} height={34} unoptimized className="rounded-lg" />
                 <div>
                   <div className="text-xs text-slate-400 dark:text-slate-500">unlock.flow</div>
                   <div className="text-sm font-semibold text-ink dark:text-white">Your reward is ready</div>
