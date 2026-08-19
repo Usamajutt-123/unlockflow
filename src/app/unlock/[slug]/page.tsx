@@ -1,13 +1,14 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getTaskOption, verifyPassword } from "@/lib/tasks";
-import type { UnlockLink, Task } from "@/lib/types";
+import type { UnlockLink, Task, Ad } from "@/lib/types";
 import { BrandIcon } from "@/components/brandIcons";
 import ThemeToggle from "@/components/ThemeToggle";
 import Background from "@/components/Background";
 import { getTheme } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
+import { BannerAd, InlineAd, BottomAdBar } from "@/components/ads";
 import Head from "next/head";
 
 export default function UnlockPage({ params }: { params: { slug: string } }) {
@@ -24,8 +25,25 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const [passError, setPassError] = useState("");
   const [copied, setCopied] = useState(false);
   const [processing, setProcessing] = useState<{ idx: number; phase: "open" | "confirm" } | null>(null);
+  const [ads, setAds] = useState<{ banner: Ad[]; task: Ad[]; bottom: Ad[] }>({ banner: [], task: [], bottom: [] });
+  const [bottomBarClosed, setBottomBarClosed] = useState(false);
 
   const storageKey = `uf_done_${slug}`;
+
+  // Load ads for the unlock page (banner / in-task / bottom bar).
+  useEffect(() => {
+    fetch("/api/ads")
+      .then((r) => r.json())
+      .then((d) => {
+        const all: Ad[] = d.ads || [];
+        setAds({
+          banner: all.filter((a) => a.slot === "banner"),
+          task: all.filter((a) => a.slot === "task"),
+          bottom: all.filter((a) => a.slot === "bottom"),
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   // Analytics tracking: tries the record_event RPC (migration 0003), and if that
   // fails (e.g. RPC not created yet), falls back to a direct counter update on
@@ -248,12 +266,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         {link.video_url && parseVideoUrl(link.video_url) && <meta property="og:image" content={parseVideoUrl(link.video_url)!.thumbnail} />}
       </Head>
       <Background />
-      {/* floating theme toggle */}
-      <div className="fixed right-5 top-5 z-50">
-        <ThemeToggle />
-      </div>
-
-      {/* brand bar */}
+      {/* brand bar — theme switch lives here in the header */}
       <div className="relative z-10">
         <div className="container-x flex items-center justify-between py-4">
           <a href="/" className="flex items-center gap-2">
@@ -266,7 +279,10 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
               UNLOCK<span className="text-brand-600 dark:text-brand-400">FLOW</span>
             </span>
           </a>
-          <a href="/" className="btn-ghost !py-2 !text-xs">Create your own</a>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <a href="/" className="btn-ghost !py-2 !text-xs">Create your own</a>
+          </div>
         </div>
       </div>
 
@@ -301,30 +317,13 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
       </div>
 
       {/* content */}
-      <div className="container-x -mt-12 pb-20">
-        {/* How to unlock guide */}
-        <div className="card mx-auto mb-4 max-w-2xl overflow-hidden !rounded-2xl dark:border-night-700 dark:bg-night-900/80">
-          <div className={`bg-gradient-to-r ${th.progressBar} px-5 py-3`}>
-            <h3 className="flex items-center gap-2 text-sm font-bold text-white">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-              How to unlock
-            </h3>
+      <div className={`container-x -mt-12 ${ads.bottom.length > 0 && !bottomBarClosed ? "pb-36" : "pb-20"}`}>
+        {/* banner ad — below the hero, above the task card */}
+        {ads.banner.length > 0 && (
+          <div className="mx-auto mb-4 max-w-2xl">
+            <BannerAd ad={ads.banner[0]} />
           </div>
-          <ol className="grid gap-1 p-4 text-sm text-slate-600 sm:grid-cols-3 dark:text-slate-300">
-            {[
-              { n: 1, t: "Tap a task" },
-              { n: 2, t: "Complete it in the new tab" },
-              { n: 3, t: "Unlock your reward" },
-            ].map((s) => (
-              <li key={s.n} className="flex items-start gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white dark:bg-brand-500">
-                  {s.n}
-                </span>
-                <span className="text-xs font-medium">{s.t}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
+        )}
 
         <div className="card mx-auto max-w-2xl !rounded-3xl p-6 sm:p-8 dark:border-night-700 dark:bg-night-900/80 dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
           {/* progress */}
@@ -352,7 +351,8 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
               const isOpen = isProcessing && processing.phase === "open";
               const isConfirm = isProcessing && processing.phase === "confirm";
               return (
-                <li key={i}>
+                <Fragment key={i}>
+                <li>
                   <button
                     onClick={() => doTask(i)}
                     disabled={done || !!processing}
@@ -410,6 +410,13 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
                     )}
                   </button>
                 </li>
+                {/* in-task ad — placed after the 2nd task (or at the end for short lists) */}
+                {ads.task.length > 0 && i === Math.min(1, tasks.length - 1) && (
+                  <li>
+                    <InlineAd ad={ads.task[0]} />
+                  </li>
+                )}
+                </Fragment>
               );
             })}
           </ul>
@@ -490,7 +497,36 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
             Powered by <span className="font-semibold text-slate-500 dark:text-slate-300">UNLOCKFLOW</span>
           </p>
         </div>
+
+        {/* How to unlock guide — below the tasks */}
+        <div className="card mx-auto mb-4 mt-4 max-w-2xl overflow-hidden !rounded-2xl dark:border-night-700 dark:bg-night-900/80">
+          <div className={`bg-gradient-to-r ${th.progressBar} px-5 py-3`}>
+            <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              How to unlock
+            </h3>
+          </div>
+          <ol className="grid gap-2 p-4 text-sm text-slate-600 sm:grid-cols-3 dark:text-slate-300">
+            {[
+              { n: 1, t: "Tap a task" },
+              { n: 2, t: "Complete it in the new tab" },
+              { n: 3, t: "Unlock your reward" },
+            ].map((s) => (
+              <li key={s.n} className="flex items-start gap-2.5 rounded-xl bg-slate-50/70 px-3 py-2.5 dark:bg-night-800/50">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white dark:bg-brand-500">
+                  {s.n}
+                </span>
+                <span className="pt-0.5 text-xs font-medium">{s.t}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
+
+      {/* fixed bottom social bar ad */}
+      {ads.bottom.length > 0 && !bottomBarClosed && (
+        <BottomAdBar ad={ads.bottom[0]} onClose={() => setBottomBarClosed(true)} />
+      )}
     </div>
   );
 }

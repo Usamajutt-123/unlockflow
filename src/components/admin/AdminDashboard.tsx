@@ -10,8 +10,9 @@ import {
 } from "recharts";
 import StatsCards from "./StatsCards";
 import BlogManager from "./BlogManager";
+import AdsManager from "./AdsManager";
 
-type Tab = "overview" | "links" | "analytics" | "admins" | "blog";
+type Tab = "overview" | "links" | "analytics" | "ads" | "admins" | "blog";
 
 interface TaskRow { id: string; label: string; task_url: string; task_type: string; position: number }
 interface LinkRow {
@@ -174,7 +175,7 @@ export default function AdminDashboard({ session }: { session: Session }) {
           </div>
         </div>
         <div className="container-x flex gap-1 pb-0">
-          {(["overview", "links", "analytics", "blog", "admins"] as Tab[]).map((t) => (
+          {(["overview", "links", "analytics", "ads", "blog", "admins"] as Tab[]).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`relative px-4 py-3 text-sm font-semibold capitalize transition ${tab === t ? "text-brand-600 dark:text-brand-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"}`}>
               {t}
@@ -289,6 +290,8 @@ export default function AdminDashboard({ session }: { session: Session }) {
             {tab === "admins" && (
               <AdminsView admins={admins} currentEmail={session.user.email || ""} onAdd={addAdmin} onRemove={removeAdmin} />
             )}
+
+            {tab === "ads" && <AdsManager token={token} auth={auth} />}
 
             {tab === "blog" && <BlogManager token={token} auth={auth} />}
           </>
