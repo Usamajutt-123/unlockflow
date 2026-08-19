@@ -18,17 +18,29 @@ export async function GET(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const rows = links || [];
-  const missingViews = rows.some((l: any) => !Number(l.views));
-  if (missingViews && rows.length) {
-    const { data: daily } = await supabaseAdmin.from("link_analytics").select("link_id, views");
-    const byLink: Record<string, number> = {};
+  // If counters on the links table are missing/zero, fill them from the
+  // daily-aggregate link_analytics table (migration 0003) so the dashboard
+  // always shows views/clicks/completions when data exists.
+  const missingCounters = rows.some((l: any) => !Number(l.views) || !Number(l.clicks) || !Number(l.completions));
+  if (missingCounters && rows.length) {
+    const { data: daily } = await supabaseAdmin
+      .from("link_analytics")
+      .select("link_id, views, clicks, completions");
+    const byLink: Record<string, { views: number; clicks: number; completions: number }> = {};
     (daily || []).forEach((r: any) => {
       const id = String(r.link_id);
-      byLink[id] = (byLink[id] || 0) + (Number(r.views) || 0);
+      byLink[id] = {
+        views: (byLink[id]?.views || 0) + (Number(r.views) || 0),
+        clicks: (byLink[id]?.clicks || 0) + (Number(r.clicks) || 0),
+        completions: (byLink[id]?.completions || 0) + (Number(r.completions) || 0),
+      };
     });
     rows.forEach((l: any) => {
-      const fromDaily = byLink[String(l.id)] || 0;
-      l.views = Math.max(Number(l.views) || 0, fromDaily);
+      const fromDaily = byLink[String(l.id)];
+      if (!fromDaily) return;
+      l.views = Math.max(Number(l.views) || 0, fromDaily.views);
+      l.clicks = Math.max(Number(l.clicks) || 0, fromDaily.clicks);
+      l.completions = Math.max(Number(l.completions) || 0, fromDaily.completions);
     });
   }
 

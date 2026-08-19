@@ -10,8 +10,9 @@ import {
 } from "recharts";
 import StatsCards from "./StatsCards";
 import BlogManager from "./BlogManager";
+import AdsManager from "./AdsManager";
 
-type Tab = "overview" | "links" | "analytics" | "admins" | "blog";
+type Tab = "overview" | "links" | "analytics" | "ads" | "admins" | "blog";
 
 interface TaskRow { id: string; label: string; task_url: string; task_type: string; position: number }
 interface LinkRow {
@@ -35,6 +36,7 @@ export default function AdminDashboard({ session }: { session: Session }) {
   const [admins, setAdmins] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
+  const [apiError, setApiError] = useState("");
 
   const auth = { authorization: `Bearer ${token}` };
 
@@ -47,12 +49,22 @@ export default function AdminDashboard({ session }: { session: Session }) {
         fetch("/api/admin/completions", { headers: auth }).then((r) => r.json()),
         fetch("/api/admin/admins", { headers: auth }).then((r) => r.json()),
       ]);
+      // Surface API errors (401, missing columns, etc.) instead of silently showing 0s.
+      const errs: string[] = [];
+      if (s?.error) errs.push(`stats: ${s.error}`);
+      if (l?.error) errs.push(`links: ${l.error}`);
+      if (a?.error) errs.push(`analytics: ${a.error}`);
+      if (c?.error) errs.push(`completions: ${c.error}`);
+      if (ad?.error) errs.push(`admins: ${ad.error}`);
+      setApiError(errs.join(" · "));
       setStats(s);
       setLinks(l.links || []);
       setSeries(a.series || []);
       setCompletions(c.completions || []);
       setAdmins(ad.admins || []);
-    } catch { /* ignore */ } finally {
+    } catch (err) {
+      setApiError(String(err));
+    } finally {
       setLoading(false);
     }
   }, [token]);
@@ -163,7 +175,7 @@ export default function AdminDashboard({ session }: { session: Session }) {
           </div>
         </div>
         <div className="container-x flex gap-1 pb-0">
-          {(["overview", "links", "analytics", "blog", "admins"] as Tab[]).map((t) => (
+          {(["overview", "links", "analytics", "ads", "blog", "admins"] as Tab[]).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`relative px-4 py-3 text-sm font-semibold capitalize transition ${tab === t ? "text-brand-600 dark:text-brand-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"}`}>
               {t}
@@ -175,6 +187,22 @@ export default function AdminDashboard({ session }: { session: Session }) {
 
       <main className="container-x py-8">
         {notice && <div className="mb-5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">{notice}</div>}
+
+        {apiError && (
+          <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            <svg className="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none">
+              <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <div>
+              <span className="font-semibold">Dashboard API error:</span> {apiError}
+              <p className="mt-1 text-xs opacity-80">
+                If you see &quot;column does not exist&quot; or &quot;relation does not exist&quot;, run the SQL migrations
+                (supabase/migrations) in your Supabase SQL editor. If you see &quot;Unauthorized&quot;, make sure your email is in the
+                admins table or matches SUPERADMIN_EMAIL.
+              </p>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-20"><div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-200 border-t-brand-600" /></div>
@@ -262,6 +290,8 @@ export default function AdminDashboard({ session }: { session: Session }) {
             {tab === "admins" && (
               <AdminsView admins={admins} currentEmail={session.user.email || ""} onAdd={addAdmin} onRemove={removeAdmin} />
             )}
+
+            {tab === "ads" && <AdsManager token={token} auth={auth} />}
 
             {tab === "blog" && <BlogManager token={token} auth={auth} />}
           </>

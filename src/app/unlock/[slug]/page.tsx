@@ -1,13 +1,14 @@
 "use client";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { getTaskOption, verifyPassword } from "@/lib/tasks";
-import type { UnlockLink, Task } from "@/lib/types";
+import type { UnlockLink, Task, Ad } from "@/lib/types";
 import { BrandIcon } from "@/components/brandIcons";
 import ThemeToggle from "@/components/ThemeToggle";
 import Background from "@/components/Background";
 import { getTheme } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
+import { BannerAd, InlineAd, BottomAdBar } from "@/components/ads";
 import Head from "next/head";
 
 export default function UnlockPage({ params }: { params: { slug: string } }) {
@@ -16,14 +17,59 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const [inactive, setInactive] = useState(false);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
   const [rewardOpen, setRewardOpen] = useState(false);
   const [passValue, setPassValue] = useState("");
   const [passError, setPassError] = useState("");
   const [copied, setCopied] = useState(false);
   const [processing, setProcessing] = useState<{ idx: number; phase: "open" | "confirm" } | null>(null);
+  const [ads, setAds] = useState<{ banner: Ad[]; task: Ad[]; bottom: Ad[] }>({ banner: [], task: [], bottom: [] });
+  const [bottomBarClosed, setBottomBarClosed] = useState(false);
 
   const storageKey = `uf_done_${slug}`;
+
+  // Load ads for the unlock page (banner / in-task / bottom bar).
+  useEffect(() => {
+    fetch("/api/ads")
+      .then((r) => r.json())
+      .then((d) => {
+        const all: Ad[] = d.ads || [];
+        setAds({
+          banner: all.filter((a) => a.slot === "banner"),
+          task: all.filter((a) => a.slot === "task"),
+          bottom: all.filter((a) => a.slot === "bottom"),
+        });
+      })
+      .catch(() => {});
+  }, []);
+
+  // Analytics tracking: tries the record_event RPC (migration 0003), and if that
+  // fails (e.g. RPC not created yet), falls back to a direct counter update on
+  // links (migration 0001 allows anon updates). Errors are logged — not swallowed.
+  const trackEvent = async (
+    event: "view" | "click" | "complete",
+    linkId?: string,
+    currentValue = 0
+  ) => {
+    if (!isSupabaseConfigured || !linkId) return;
+    try {
+      const { error } = await supabase.rpc("record_event", { p_slug: slug, p_event: event });
+      if (error) {
+        console.warn(`[unlockflow] record_event RPC failed (${event}):`, error.message);
+        // Fallback: bump the counter directly on the links row.
+        const col = event === "view" ? "views" : event === "click" ? "clicks" : "completions";
+        const res = await supabase
+          .from("links")
+          .update({ [col]: (Number(currentValue) || 0) + 1 })
+          .eq("id", linkId);
+        if (res.error) console.warn(`[unlockflow] fallback counter update failed (${col}):`, res.error.message);
+      }
+    } catch (err) {
+      console.warn(`[unlockflow] analytics tracking failed (${event}):`, err);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -44,20 +90,20 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         return;
       }
 
-      // expiry check
+      // expiry check — show a dedicated "expired" page instead of "not found"
       if (data.expiry_date && new Date(data.expiry_date).getTime() < Date.now()) {
-        setNotFound(true);
+        setExpired(true);
         setLoading(false);
         return;
       }
       if (data.active === false) {
-        setNotFound(true);
+        setInactive(true);
         setLoading(false);
         return;
       }
 
-      // track a view (best effort)
-      (async () => { await supabase.rpc("record_event", { p_slug: slug, p_event: "view" }); })().catch(() => {});
+      // track a view (best effort, with fallback + logging)
+      trackEvent("view", data.id, data.views || 0);
 
       const ordered = [...(data.tasks || [])].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
       setLink(data);
@@ -88,8 +134,8 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
     setTimeout(() => {
       // open the link on the SAME link the creator provided
       window.open(t.task_url, "_blank", "noopener");
-      // track a click (best effort)
-      (async () => { await supabase.rpc("record_event", { p_slug: slug, p_event: "click" }); })().catch(() => {});
+      // track a click (best effort, with fallback + logging)
+      trackEvent("click", link?.id, link?.clicks || 0);
 
       // Phase 2: "Confirming..." loading (0.6s), then mark task complete
       setProcessing({ idx, phase: "confirm" });
@@ -110,9 +156,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   // when all done, record completion (compact counter, no unbounded rows)
   useEffect(() => {
     if (!allDone || !link?.id || !isSupabaseConfigured) return;
-    (async () => {
-      await supabase.rpc("record_event", { p_slug: slug, p_event: "complete" });
-    })().catch(() => {});
+    trackEvent("complete", link.id, link?.completions || 0);
   }, [allDone, link?.id, slug]);
 
   const openReward = async () => {
@@ -151,6 +195,45 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
     );
   }
 
+  if (expired) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
+        <Background />
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
+          <svg className="h-8 w-8 text-amber-500" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+            <path d="M12 7v5m0 3v.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M5 5l14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+          </svg>
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-extrabold text-ink dark:text-white">Link has expired</h1>
+        <p className="mt-2 max-w-sm text-slate-500 dark:text-slate-400">
+          Sorry — this unlock link is no longer available. The creator set an expiry date and it has passed.
+        </p>
+        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">If you were expecting this link to work, please contact the creator.</p>
+        <a href="/" className="btn-primary mt-6">Go to UNLOCKFLOW</a>
+      </div>
+    );
+  }
+
+  if (inactive) {
+    return (
+      <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
+        <Background />
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-night-800">
+          <svg className="h-8 w-8 text-slate-500 dark:text-slate-400" viewBox="0 0 24 24" fill="none">
+            <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-extrabold text-ink dark:text-white">Link unavailable</h1>
+        <p className="mt-2 max-w-sm text-slate-500 dark:text-slate-400">
+          This unlock link has been turned off by its creator and is no longer accepting visitors.
+        </p>
+        <a href="/" className="btn-primary mt-6">Go to UNLOCKFLOW</a>
+      </div>
+    );
+  }
+
   if (notFound || !link) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 text-center dark:bg-night-950">
@@ -162,7 +245,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         </div>
         <h1 className="mt-5 font-display text-2xl font-extrabold text-ink dark:text-white">Link not found</h1>
         <p className="mt-2 text-slate-500 dark:text-slate-400">
-          This unlock link is invalid, has expired, or Supabase isn't configured.
+          This unlock link doesn't exist or isn't published yet.
         </p>
         <a href="/" className="btn-primary mt-6">Go to UNLOCKFLOW</a>
       </div>
@@ -183,12 +266,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         {link.video_url && parseVideoUrl(link.video_url) && <meta property="og:image" content={parseVideoUrl(link.video_url)!.thumbnail} />}
       </Head>
       <Background />
-      {/* floating theme toggle */}
-      <div className="fixed right-5 top-5 z-50">
-        <ThemeToggle />
-      </div>
-
-      {/* brand bar */}
+      {/* brand bar — theme switch lives here in the header */}
       <div className="relative z-10">
         <div className="container-x flex items-center justify-between py-4">
           <a href="/" className="flex items-center gap-2">
@@ -201,7 +279,10 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
               UNLOCK<span className="text-brand-600 dark:text-brand-400">FLOW</span>
             </span>
           </a>
-          <a href="/" className="btn-ghost !py-2 !text-xs">Create your own</a>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <a href="/" className="btn-ghost !py-2 !text-xs">Create your own</a>
+          </div>
         </div>
       </div>
 
@@ -236,30 +317,13 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
       </div>
 
       {/* content */}
-      <div className="container-x -mt-12 pb-20">
-        {/* How to unlock guide */}
-        <div className="card mx-auto mb-4 max-w-2xl overflow-hidden !rounded-2xl dark:border-night-700 dark:bg-night-900/80">
-          <div className={`bg-gradient-to-r ${th.progressBar} px-5 py-3`}>
-            <h3 className="flex items-center gap-2 text-sm font-bold text-white">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-              How to unlock
-            </h3>
+      <div className={`container-x -mt-12 ${ads.bottom.length > 0 && !bottomBarClosed ? "pb-36" : "pb-20"}`}>
+        {/* banner ad — below the hero, above the task card */}
+        {ads.banner.length > 0 && (
+          <div className="mx-auto mb-4 max-w-2xl">
+            <BannerAd ad={ads.banner[0]} />
           </div>
-          <ol className="grid gap-1 p-4 text-sm text-slate-600 sm:grid-cols-3 dark:text-slate-300">
-            {[
-              { n: 1, t: "Tap a task" },
-              { n: 2, t: "Complete it in the new tab" },
-              { n: 3, t: "Unlock your reward" },
-            ].map((s) => (
-              <li key={s.n} className="flex items-start gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white dark:bg-brand-500">
-                  {s.n}
-                </span>
-                <span className="text-xs font-medium">{s.t}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
+        )}
 
         <div className="card mx-auto max-w-2xl !rounded-3xl p-6 sm:p-8 dark:border-night-700 dark:bg-night-900/80 dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
           {/* progress */}
@@ -287,7 +351,8 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
               const isOpen = isProcessing && processing.phase === "open";
               const isConfirm = isProcessing && processing.phase === "confirm";
               return (
-                <li key={i}>
+                <Fragment key={i}>
+                <li>
                   <button
                     onClick={() => doTask(i)}
                     disabled={done || !!processing}
@@ -345,6 +410,13 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
                     )}
                   </button>
                 </li>
+                {/* in-task ad — placed after the 2nd task (or at the end for short lists) */}
+                {ads.task.length > 0 && i === Math.min(1, tasks.length - 1) && (
+                  <li>
+                    <InlineAd ad={ads.task[0]} />
+                  </li>
+                )}
+                </Fragment>
               );
             })}
           </ul>
@@ -425,7 +497,36 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
             Powered by <span className="font-semibold text-slate-500 dark:text-slate-300">UNLOCKFLOW</span>
           </p>
         </div>
+
+        {/* How to unlock guide — below the tasks */}
+        <div className="card mx-auto mb-4 mt-4 max-w-2xl overflow-hidden !rounded-2xl dark:border-night-700 dark:bg-night-900/80">
+          <div className={`bg-gradient-to-r ${th.progressBar} px-5 py-3`}>
+            <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              How to unlock
+            </h3>
+          </div>
+          <ol className="grid gap-2 p-4 text-sm text-slate-600 sm:grid-cols-3 dark:text-slate-300">
+            {[
+              { n: 1, t: "Tap a task" },
+              { n: 2, t: "Complete it in the new tab" },
+              { n: 3, t: "Unlock your reward" },
+            ].map((s) => (
+              <li key={s.n} className="flex items-start gap-2.5 rounded-xl bg-slate-50/70 px-3 py-2.5 dark:bg-night-800/50">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white dark:bg-brand-500">
+                  {s.n}
+                </span>
+                <span className="pt-0.5 text-xs font-medium">{s.t}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
+
+      {/* fixed bottom social bar ad */}
+      {ads.bottom.length > 0 && !bottomBarClosed && (
+        <BottomAdBar ad={ads.bottom[0]} onClose={() => setBottomBarClosed(true)} />
+      )}
     </div>
   );
 }

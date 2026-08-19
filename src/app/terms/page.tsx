@@ -1,5 +1,17 @@
+import type { Metadata } from "next";
 import PageShell from "@/components/PageShell";
 import { Section, P, List } from "@/components/InfoContent";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "The rules and conditions for using UNLOCKFLOW — acceptable use, your responsibility, and the terms that apply to your unlock links.",
+  openGraph: {
+    title: "Terms of Service | UNLOCKFLOW",
+    description:
+      "Read the terms and conditions for using UNLOCKFLOW, including acceptable use and your responsibilities.",
+  },
+};
 
 export default function TermsPage() {
   return (

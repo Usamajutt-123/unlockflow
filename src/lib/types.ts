@@ -22,6 +22,9 @@ export interface UnlockLink {
   expiry_date?: string | null;
   theme?: string;
   active: boolean;
+  views?: number;
+  clicks?: number;
+  completions?: number;
   created_at?: string;
   tasks?: Task[];
 }
@@ -70,3 +73,21 @@ export const POST_CATEGORIES = [
   "Marketing",
   "Announcements",
 ] as const;
+
+export type AdSlot = "banner" | "task" | "bottom";
+export const AD_SLOTS: AdSlot[] = ["banner", "task", "bottom"];
+export const AD_SLOT_LABELS: Record<AdSlot, string> = {
+  banner: "Banner (below hero)",
+  task: "In-task (inside task list)",
+  bottom: "Bottom bar (fixed)",
+};
+
+export interface Ad {
+  id?: string;
+  slot: AdSlot;
+  title: string;
+  image_url: string;
+  link_url: string;
+  active: boolean;
+  created_at?: string;
+}

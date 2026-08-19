@@ -1,5 +1,17 @@
+import type { Metadata } from "next";
 import PageShell from "@/components/PageShell";
 import { Section, P, List } from "@/components/InfoContent";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "How UNLOCKFLOW handles your data and the data of your visitors — minimal by default, you own your links, tasks, and completion records.",
+  openGraph: {
+    title: "Privacy Policy | UNLOCKFLOW",
+    description:
+      "UNLOCKFLOW is designed to be minimal by default. Learn what we collect, how we use data, and your control over it.",
+  },
+};
 
 export default function PrivacyPage() {
   return (

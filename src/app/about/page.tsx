@@ -1,5 +1,17 @@
+import type { Metadata } from "next";
 import PageShell from "@/components/PageShell";
 import { Section, P, Cards } from "@/components/InfoContent";
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description:
+    "UNLOCKFLOW helps creators turn their audience into engaged fans with premium, automated unlock links. No signup, no login — just growth.",
+  openGraph: {
+    title: "About UNLOCKFLOW",
+    description:
+      "We help creators turn their audience into engaged fans with premium, automated unlock links — free, no login required.",
+  },
+};
 
 export default function AboutPage() {
   return (
