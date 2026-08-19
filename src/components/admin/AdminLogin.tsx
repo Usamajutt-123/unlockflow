@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Background from "../Background";
+import Logo from "../Logo";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -26,10 +27,8 @@ export default function AdminLogin() {
       <Background />
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-purple-600 shadow-glow">
-            <svg className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none">
-              <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+          <div className="mx-auto flex h-16 w-16 items-center justify-center">
+            <Logo className="h-16 w-16" showText={false} />
           </div>
           <h1 className="mt-4 font-display text-3xl font-extrabold text-white">Admin</h1>
           <p className="mt-2 text-slate-400">Sign in to access the UNLOCKFLOW dashboard</p>

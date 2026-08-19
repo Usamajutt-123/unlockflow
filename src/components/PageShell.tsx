@@ -1,5 +1,6 @@
 import Background from "./Background";
 import Footer from "./Footer";
+import Logo from "./Logo";
 
 interface PageShellProps {
   title: string;
@@ -15,15 +16,8 @@ export default function PageShell({ title, subtitle, badge, children }: PageShel
       {/* top bar */}
       <div className="relative z-10">
         <div className="container-x flex items-center justify-between py-4">
-          <a href="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-purple-600 shadow-glow">
-              <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </span>
-            <span className="font-display text-lg font-extrabold tracking-tight text-ink dark:text-white">
-              UNLOCK<span className="text-brand-600 dark:text-brand-400">FLOW</span>
-            </span>
+          <a href="/" className="flex items-center gap-2" aria-label="UNLOCKFLOW home">
+            <Logo />
           </a>
           <a href="/" className="btn-primary !py-2 !text-xs">← Back to Home</a>
         </div>

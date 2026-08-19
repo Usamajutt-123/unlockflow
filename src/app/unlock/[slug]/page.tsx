@@ -6,6 +6,7 @@ import type { UnlockLink, Task, Ad } from "@/lib/types";
 import { BrandIcon } from "@/components/brandIcons";
 import ThemeToggle from "@/components/ThemeToggle";
 import Background from "@/components/Background";
+import Logo from "@/components/Logo";
 import { getTheme } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
 import { BannerAd, InlineAd, BoxAd, SocialAdBar } from "@/components/ads";
@@ -302,15 +303,8 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
       {/* brand bar — theme switch lives here in the header */}
       <div className="relative z-10">
         <div className="container-x flex items-center justify-between py-4">
-          <a href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-brand-600 to-purple-600 shadow-glow">
-              <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
-                <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </span>
-            <span className="font-display text-base font-extrabold tracking-tight text-ink dark:text-white">
-              UNLOCK<span className="text-brand-600 dark:text-brand-400">FLOW</span>
-            </span>
+          <a href="/" className="flex items-center gap-2" aria-label="UNLOCKFLOW home">
+            <Logo className="h-8 w-8" textClassName="text-base" />
           </a>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -581,9 +575,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
               href="/#generator"
               className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-600 to-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-glow transition hover:from-brand-700 hover:to-purple-700 active:scale-[0.97]"
             >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                <path d="M13.19 4.39a3.36 3.36 0 0 1 4.75 0l1.67 1.67a3.36 3.36 0 0 1 0 4.75l-3.3 3.3a3.36 3.36 0 0 1-4.75 0M10.81 19.61a3.36 3.36 0 0 1-4.75 0l-1.67-1.67a3.36 3.36 0 0 1 0-4.75l3.3-3.3a3.36 3.36 0 0 1 4.75 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+              <Logo className="h-4 w-4" showText={false} />
               UNLOCK<span className="opacity-90">FLOW</span>
             </a>
           </div>
