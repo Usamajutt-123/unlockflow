@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import QRCode from "qrcode";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
@@ -15,7 +14,6 @@ import { parseVideoUrl } from "@/lib/thumbnail";
 interface SelectedTask extends Task {}
 
 export default function LinkGenerator() {
-  const router = useRouter();
   const [activeInputs, setActiveInputs] = useState<{ id: string; url: string; name: string }[]>([]);
   const [tasks, setTasks] = useState<SelectedTask[]>([]);
 
@@ -165,8 +163,6 @@ export default function LinkGenerator() {
 
       const fullUrl = `${baseUrl}/unlock/${slug}`;
       setResult({ slug, fullUrl, destination_url: destinationUrl.trim() });
-      // go to the success page which shows the link + QR code
-      router.push(`/success?url=${encodeURIComponent(fullUrl)}&slug=${encodeURIComponent(slug)}`);
     } catch (err: any) {
       setError(err?.message || "Something went wrong while generating. Check your Supabase setup.");
     } finally {
@@ -215,6 +211,11 @@ export default function LinkGenerator() {
     await copyLink();
   };
 
+  useEffect(() => {
+    if (!result) return;
+    document.getElementById("generated-result")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [result]);
+
   const reset = () => {
     setResult(null);
     setTasks([]);
@@ -244,8 +245,7 @@ export default function LinkGenerator() {
           </p>
         </div>
 
-        {!result ? (
-          <div className="mx-auto mt-12 grid max-w-6xl items-start gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="mx-auto mt-12 grid max-w-6xl items-start gap-6 lg:grid-cols-[1.4fr_1fr]">
             {/* generator card */}
             <div className="card overflow-hidden !rounded-3xl dark:border-night-700 dark:bg-night-900/70 dark:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
             {/* Step 1 */}
@@ -595,6 +595,79 @@ export default function LinkGenerator() {
                   Supabase not configured. Add your keys in .env.local — links won't persist until you do.
                 </p>
               )}
+
+              {result && (
+                <div id="generated-result" className="mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-night-700">
+                  <div className="relative bg-gradient-to-br from-brand-600 to-purple-600 px-5 py-4 text-center">
+                    <div className="absolute inset-0 bg-grid opacity-20" />
+                    <span className="relative inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      Link generated successfully
+                    </span>
+                    <h3 className="relative mt-2 font-display text-lg font-extrabold text-white">Your unlock link is ready!</h3>
+                  </div>
+
+                  <div className="px-5 py-5">
+                    <div className="flex flex-col items-center gap-5 sm:flex-row">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-night-700 dark:bg-white">
+                          <QRCodeSVG value={result.fullUrl} size={150} bgColor="#ffffff" fgColor="#1d4ff0" level="M" />
+                        </div>
+                        <button onClick={downloadQr} className="btn-ghost !py-2 !text-xs">
+                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          Download QR
+                        </button>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <label className="label">Your unlock link</label>
+                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-night-700 dark:bg-night-800">
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+                            {result.fullUrl.replace(/^https?:\/\//, "").replace(/\/unlock\//, "/")}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button onClick={copyLink} className="btn-primary !py-2.5">
+                            {copied ? (
+                              <>
+                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                                  <rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
+                                  <path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" strokeWidth="2" />
+                                </svg>
+                                Copy Link
+                              </>
+                            )}
+                          </button>
+                          <button onClick={shareLink} className="btn-ghost !py-2.5">
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                              <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2" />
+                              <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                              <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2" />
+                              <path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" stroke="currentColor" strokeWidth="2" />
+                            </svg>
+                            Share
+                          </button>
+                          <a href={result.fullUrl} target="_blank" rel="noreferrer" className="btn-ghost !py-2.5">
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                              <path d="M14 3h7v7M21 3l-9 9M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Open
+                          </a>
+                        </div>
+                        <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">Test it — or create another link.</p>
+                      </div>
+                    </div>
+
+                    <button onClick={reset} className="btn-ghost mt-5 w-full">Create another link</button>
+                  </div>
+                </div>
+              )}
             </div>
             </div>
 
@@ -629,95 +702,6 @@ export default function LinkGenerator() {
               )}
             </div>
           </div>
-        ) : (
-          /* Result card */
-          <div className="card mx-auto mt-12 max-w-2xl overflow-hidden !rounded-3xl dark:border-night-700 dark:bg-night-900/70">
-            <div className="relative bg-gradient-to-br from-brand-600 to-purple-600 px-8 py-6 text-center">
-              <div className="absolute inset-0 bg-grid opacity-20" />
-              <span className="relative inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Link generated successfully
-              </span>
-              <h3 className="relative mt-3 font-display text-2xl font-extrabold text-white">Your unlock link is ready!</h3>
-            </div>
-
-            <div className="px-8 py-8">
-              <div className="flex flex-col items-center gap-6 sm:flex-row">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-night-700 dark:bg-white">
-                    <QRCodeSVG value={result.fullUrl} size={150} bgColor="#ffffff" fgColor="#1d4ff0" level="M" />
-                  </div>
-                  <button onClick={downloadQr} className="btn-ghost !py-2 !text-xs">
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    Download QR
-                  </button>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <label className="label">Your unlock link</label>
-                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-night-700 dark:bg-night-800">
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-                      {result.fullUrl.replace(/^https?:\/\//, "").replace(/\/unlock\//, "/")}
-                    </span>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button onClick={copyLink} className="btn-primary !py-2.5">
-                      {copied ? (
-                        <>
-                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                            <rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
-                            <path d="M5 15V5a2 2 0 0 1 2-2h10" stroke="currentColor" strokeWidth="2" />
-                          </svg>
-                          Copy Link
-                        </>
-                      )}
-                    </button>
-                    <button onClick={shareLink} className="btn-ghost !py-2.5">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                        <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2" />
-                        <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-                        <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2" />
-                        <path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      Share
-                    </button>
-                    <a href={result.fullUrl} target="_blank" rel="noreferrer" className="btn-ghost !py-2.5">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                        <path d="M14 3h7v7M21 3l-9 9M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      Open
-                    </a>
-                  </div>
-                  <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">Test it — or create another link.</p>
-                </div>
-              </div>
-
-              <div className="mt-6 border-t border-slate-100 pt-5 dark:border-night-700">
-                <h4 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Tasks your visitors must complete</h4>
-                <ul className="space-y-2">
-                  {tasks.map((t, i) => {
-                    const opt = getTaskOption(t.task_type);
-                    return (
-                      <li key={i} className="flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2 text-sm dark:bg-night-800">
-                        <BrandIcon brand={opt?.brand || "custom"} className="h-4 w-4" />
-                        <span className="font-medium text-slate-700 dark:text-slate-200">{t.label}</span>
-                        <span className="ml-auto truncate text-xs text-slate-400 dark:text-slate-500">{t.task_url}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              <button onClick={reset} className="btn-ghost mt-6 w-full">Create another link</button>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );
