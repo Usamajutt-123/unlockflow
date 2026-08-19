@@ -6,8 +6,8 @@ export default function Hero() {
       {/* backgrounds */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/50 via-transparent to-transparent dark:from-night-900/40 dark:via-transparent dark:to-transparent" />
       <div className="absolute inset-0 -z-10 bg-grid [mask-image:radial-gradient(ellipse_at_top,black_35%,transparent_75%)]" />
-      <div className="absolute -top-24 left-1/2 -z-10 h-80 w-[44rem] -translate-x-1/2 rounded-full bg-brand-400/25 blur-3xl dark:bg-brand-600/20" />
-      <div className="absolute right-0 top-1/3 -z-10 h-64 w-64 rounded-full bg-purple-400/20 blur-3xl dark:bg-purple-600/10" />
+      <div className="absolute -top-24 left-1/2 -z-10 hidden h-80 w-[44rem] -translate-x-1/2 rounded-full bg-brand-400/25 blur-3xl md:block dark:bg-brand-600/20" />
+      <div className="absolute right-0 top-1/3 -z-10 hidden h-64 w-64 rounded-full bg-purple-400/20 blur-3xl md:block dark:bg-purple-600/10" />
 
       {/* premium floating accents */}
       <div className="pointer-events-none absolute left-[6%] top-32 -z-10 hidden h-14 w-14 animate-float rounded-2xl border border-brand-200/60 bg-white/40 backdrop-blur lg:block dark:border-night-700 dark:bg-night-800/40">

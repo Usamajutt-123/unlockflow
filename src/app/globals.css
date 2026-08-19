@@ -137,7 +137,20 @@ body {
 }
 
 .glass {
-  @apply bg-white/70 backdrop-blur-xl dark:bg-night-900/60;
+  background-color: rgb(255 255 255 / 0.86);
+}
+.dark .glass {
+  background-color: rgb(10 15 28 / 0.88);
+}
+@media (min-width: 1024px) {
+  .glass {
+    background-color: rgb(255 255 255 / 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .dark .glass {
+    background-color: rgb(10 15 28 / 0.6);
+  }
 }
 
 /* premium glow ring for focus states */
@@ -152,7 +165,6 @@ body {
   position: absolute;
   border-radius: 9999px;
   filter: blur(70px);
-  will-change: transform, opacity;
 }
 
 .orb-1 {
@@ -231,7 +243,6 @@ body {
 .particle {
   position: absolute;
   border-radius: 9999px;
-  will-change: transform, opacity;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
@@ -273,9 +284,54 @@ body {
   82% { opacity: var(--p-op, 0.5); }
 }
 
+@media (min-width: 768px) {
+  .orb,
+  .particle {
+    will-change: transform, opacity;
+  }
+}
+
+/* Mobile: fewer / smaller orbs, weaker blur, slower animation */
+@media (max-width: 767px) {
+  .orb {
+    filter: blur(36px);
+    animation-duration: 48s !important;
+    animation-timing-function: linear !important;
+  }
+  .orb-1 {
+    width: 18rem;
+    height: 18rem;
+    left: -6rem;
+    top: -5rem;
+  }
+  .orb-2 {
+    width: 16rem;
+    height: 16rem;
+    right: -5rem;
+    top: 38%;
+  }
+  .orb-3,
+  .orb-4 {
+    display: none;
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 0 1px rgba(51, 112, 255, 0.12), 0 4px 16px -8px rgba(51, 112, 255, 0.22);
+  }
+  .shadow-card {
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  }
+  .btn-primary {
+    box-shadow: 0 4px 14px -6px rgba(51, 112, 255, 0.35);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orb, .particle {
     animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
   }
 }
 
