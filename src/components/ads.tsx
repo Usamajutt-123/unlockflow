@@ -4,7 +4,7 @@ import type { Ad } from "@/lib/types";
 
 function AdLabel() {
   return (
-    <span className="rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 backdrop-blur dark:border-night-600 dark:bg-night-800/80 dark:text-slate-400">
+    <span className="unlock-ad-label rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 backdrop-blur dark:border-night-600 dark:bg-night-800/80 dark:text-slate-400">
       Ad
     </span>
   );
@@ -74,7 +74,7 @@ function ScriptAd({ ad, className }: { ad: Ad; className?: string }) {
 function ScriptFrame({ ad, className }: { ad: Ad; className?: string }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-3 dark:border-night-600 dark:bg-night-800/40 ${
+      className={`unlock-script-frame relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-3 dark:border-night-600 dark:bg-night-800/40 ${
         className || ""
       }`}
     >
@@ -93,7 +93,7 @@ export function BannerAd({ ad }: { ad: Ad }) {
   }
 
   const content = (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-glow dark:border-night-700 dark:bg-night-900">
+    <div className="unlock-banner-ad group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-glow dark:border-night-700 dark:bg-night-900">
       {ad.image_url ? (
         <div className="relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -140,7 +140,7 @@ export function InlineAd({ ad }: { ad: Ad }) {
   }
 
   const content = (
-    <div className="group relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-night-600 dark:bg-night-800/40 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/5">
+    <div className="unlock-inline-ad group relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-night-600 dark:bg-night-800/40 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/5">
       <div className="flex items-center gap-3 px-3.5 py-3">
         <AdImage ad={ad} className="h-11 w-11 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
@@ -174,7 +174,7 @@ export function BoxAd({ ad }: { ad: Ad }) {
   }
 
   const content = (
-    <div className="group relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-night-600 dark:bg-night-800/40 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/5">
+    <div className="unlock-box-ad group relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-night-600 dark:bg-night-800/40 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/5">
       <div className="flex items-center gap-3 px-3.5 py-3">
         <AdImage ad={ad} className="h-11 w-11 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
@@ -204,8 +204,8 @@ export function BoxAd({ ad }: { ad: Ad }) {
 /** Fixed bottom "social bar" ad with a close button (image or script). */
 export function SocialAdBar({ ad, onClose }: { ad: Ad; onClose: () => void }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 p-3 sm:p-4">
-      <div className="group relative mx-auto max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-[0_-8px_40px_-12px_rgba(16,24,40,0.25)] backdrop-blur dark:border-night-600 dark:bg-night-800/95 dark:shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.6)]">
+    <div className="unlock-social-ad fixed inset-x-0 bottom-0 z-40 p-3 sm:p-4">
+      <div className="unlock-social-ad-inner group relative mx-auto max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-[0_-8px_40px_-12px_rgba(16,24,40,0.25)] backdrop-blur dark:border-night-600 dark:bg-night-800/95 dark:shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.6)]">
         {isScript(ad) ? (
           <div className="relative px-4 py-3 pr-12">
             <span className="absolute left-3 top-3 z-10">
