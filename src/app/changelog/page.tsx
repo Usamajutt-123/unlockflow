@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import PageShell from "@/components/PageShell";
+import { Section, P } from "@/components/InfoContent";
 
 export const metadata: Metadata = {
   title: "Changelog",
   description: "What's new in UNLOCKFLOW — recent updates and improvements.",
+  openGraph: {
+    title: "Changelog | UNLOCKFLOW",
+    description: "Recent updates and improvements to UNLOCKFLOW.",
+  },
 };
-import PageShell from "@/components/PageShell";
-import { Section, P } from "@/components/InfoContent";
 
 export default function ChangelogPage() {
   return (
