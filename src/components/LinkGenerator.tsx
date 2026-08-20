@@ -217,6 +217,17 @@ export default function LinkGenerator() {
     await copyLink();
   };
 
+  // On the first visit, glide visitors straight to the Task/Unlock builder
+  // instead of leaving them at the Hero. Runs once on mount (which also covers
+  // a page refresh). Manual scrolling and later navigation are left untouched.
+  useEffect(() => {
+    const section = document.getElementById("unlock-tasks");
+    if (!section) return;
+    requestAnimationFrame(() => {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
+
   useEffect(() => {
     if (!result) return;
     document.getElementById("generated-result")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -239,7 +250,7 @@ export default function LinkGenerator() {
   };
 
   return (
-    <section id="generator" className="bg-slate-50/50 py-20 sm:py-24 dark:bg-night-900/40">
+    <section id="unlock-tasks" className="scroll-mt-16 bg-slate-50/50 py-20 sm:py-24 dark:bg-night-900/40">
       <div className="container-x">
         <div className="mx-auto max-w-2xl text-center">
           <span className="text-sm font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">Link Generator</span>

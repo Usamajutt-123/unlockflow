@@ -4,7 +4,7 @@ import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 
 const links = [
-  { label: "Generator", href: "#generator" },
+  { label: "Generator", href: "#unlock-tasks" },
   { label: "Why Us", href: "#why-us" },
   { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "#faq" },
@@ -54,7 +54,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 lg:flex">
           <ThemeToggle />
-          <a href="#generator" className="btn-primary !py-2.5">
+          <a href="#unlock-tasks" className="btn-primary !py-2.5">
             Create Unlock Link
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
               <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -93,7 +93,7 @@ export default function Navbar() {
                 {l.label}
               </a>
             ))}
-            <a href="#generator" onClick={() => setOpen(false)} className="btn-primary mt-2">
+            <a href="#unlock-tasks" onClick={() => setOpen(false)} className="btn-primary mt-2">
               Create Unlock Link
             </a>
           </div>

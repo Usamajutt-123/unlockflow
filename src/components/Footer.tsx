@@ -4,7 +4,7 @@ const cols = [
   {
     title: "Product",
     links: [
-      { label: "Link Generator", href: "/#generator" },
+      { label: "Link Generator", href: "/#unlock-tasks" },
       { label: "Task Library", href: "/task-library" },
       { label: "QR Codes", href: "/qr-codes" },
       { label: "Advanced Options", href: "/advanced-options" },

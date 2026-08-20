@@ -39,10 +39,10 @@ export default function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <a href="#generator" className="btn-primary !px-7 !py-4 !text-base">
+            <a href="#unlock-tasks" className="btn-primary !px-7 !py-4 !text-base">
               Create Your Link — Free
             </a>
-            <a href="#generator" className="btn-ghost !px-7 !py-4 !text-base">
+            <a href="#unlock-tasks" className="btn-ghost !px-7 !py-4 !text-base">
               Explore Tasks
             </a>
           </div>

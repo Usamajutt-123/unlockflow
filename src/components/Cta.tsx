@@ -15,7 +15,7 @@ export default function Cta() {
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <a
-                href="#generator"
+                href="#unlock-tasks"
                 className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-4 text-base font-bold text-brand-700 shadow-lg transition hover:scale-[1.02] active:scale-[0.98]"
               >
                 Create Your Link

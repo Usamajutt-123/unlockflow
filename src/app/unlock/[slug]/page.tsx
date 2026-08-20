@@ -360,7 +360,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
               <span className="unlock-theme-toggle" title="Switch site light/dark mode">
                 <ThemeToggle />
               </span>
-              <a href="/#generator" className="unlock-create-link">
+              <a href="/#unlock-tasks" className="unlock-create-link">
                 <span className="unlock-create-label">Create your own</span>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -631,7 +631,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
 
           <div className="unlock-powered-by">
             <span>Powered by</span>
-            <a href="/#generator" aria-label="Create a link with UNLOCKFLOW">
+            <a href="/#unlock-tasks" aria-label="Create a link with UNLOCKFLOW">
               <Logo className="h-4 w-4" showText={false} />
               <strong>UNLOCKFLOW</strong>
             </a>
