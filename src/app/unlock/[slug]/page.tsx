@@ -9,7 +9,7 @@ import Background from "@/components/Background";
 import Logo from "@/components/Logo";
 import { getTheme } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
-import { BannerAd, InlineAd, BoxAd, SocialAdBar } from "@/components/ads";
+import { BannerAd, InlineAd, InterstitialAd, SocialAdBar } from "@/components/ads";
 import Head from "next/head";
 
 const UNLOCK_FAQS = [
@@ -85,18 +85,17 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const [ads, setAds] = useState<{
     banner: Ad[];
     task: Ad[];
-    task_center: Ad[];
-    above_unlock: Ad[];
-    faq: Ad[];
+    interstitial: Ad[];
     social: Ad[];
-  }>({ banner: [], task: [], task_center: [], above_unlock: [], faq: [], social: [] });
+  }>({ banner: [], task: [], interstitial: [], social: [] });
   const [bottomBarClosed, setBottomBarClosed] = useState(false);
+  const [interstitialOpen, setInterstitialOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(0);
 
   const storageKey = `uf_done_${slug}`;
 
-  // Load every unlock-page ad placement. The redesign deliberately keeps all
-  // six slots instead of hiding less common placements on small screens.
+  // Four placements on the existing ads table: native below header, native in
+  // the task list, interstitial on unlock (slot: above_unlock), sticky bottom.
   useEffect(() => {
     fetch("/api/ads")
       .then((r) => r.json())
@@ -105,9 +104,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         setAds({
           banner: all.filter((a) => a.slot === "banner"),
           task: all.filter((a) => a.slot === "task"),
-          task_center: all.filter((a) => a.slot === "task_center"),
-          above_unlock: all.filter((a) => a.slot === "above_unlock"),
-          faq: all.filter((a) => a.slot === "faq"),
+          interstitial: all.filter((a) => a.slot === "above_unlock"),
           social: all.filter((a) => a.slot === "social"),
         });
       })
@@ -217,6 +214,14 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
     trackEvent("complete", link.id, link?.completions || 0);
   }, [allDone, link?.id, slug]);
 
+  const revealReward = () => {
+    setInterstitialOpen(false);
+    setRewardOpen(true);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...completed]));
+    } catch {}
+  };
+
   const openReward = async () => {
     if (link?.has_password && link.password_hash) {
       const ok = await verifyPassword(passValue, link.password_hash);
@@ -226,10 +231,11 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
       }
       setPassError("");
     }
-    setRewardOpen(true);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify([...completed]));
-    } catch {}
+    if (ads.interstitial.length > 0 && !rewardOpen) {
+      setInterstitialOpen(true);
+      return;
+    }
+    revealReward();
   };
 
   const copyDest = async () => {
@@ -315,11 +321,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const video = parseVideoUrl(link.video_url || "");
   const coverImage = video?.thumbnail || link.banner_url || "";
 
-  // Placement math for the two in-list ad slots.
   const inlineTaskIdx = Math.min(1, tasks.length - 1);
-  let taskCenterIdx = Math.round(tasks.length / 2) - 1;
-  if (tasks.length < 2) taskCenterIdx = -1;
-  if (ads.task.length > 0 && taskCenterIdx === inlineTaskIdx) taskCenterIdx += 1;
 
   return (
     <div
@@ -417,7 +419,7 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
           </div>
 
           {ads.banner.length > 0 && (
-            <div className="unlock-ad-slot unlock-banner-slot" aria-label="Banner advertisement">
+            <div className="unlock-ad-slot unlock-banner-slot" aria-label="Advertisement">
               <BannerAd ad={ads.banner[0]} />
             </div>
           )}
@@ -497,22 +499,11 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
                         <InlineAd ad={ads.task[0]} />
                       </li>
                     )}
-                    {ads.task_center.length > 0 && i === taskCenterIdx && (
-                      <li className="unlock-list-ad">
-                        <BoxAd ad={ads.task_center[0]} />
-                      </li>
-                    )}
                   </Fragment>
                 );
               })}
             </ul>
           </section>
-
-          {ads.above_unlock.length > 0 && (
-            <div className="unlock-ad-slot unlock-before-button-ad" aria-label="Advertisement above unlock button">
-              <BoxAd ad={ads.above_unlock[0]} />
-            </div>
-          )}
 
           <section className="unlock-reward-section" aria-label="Unlock reward">
             {link.has_password && !rewardOpen && (
@@ -604,27 +595,19 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
 
             <div className="unlock-faq-list">
               {UNLOCK_FAQS.map((faq, i) => (
-                <Fragment key={faq.q}>
-                  <div className={`unlock-faq-item ${faqOpen === i ? "is-open" : ""}`}>
-                    <button
-                      onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                      aria-expanded={faqOpen === i}
-                      aria-controls={`unlock-faq-answer-${i}`}
-                    >
-                      <span>{faq.q}</span>
-                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 9 5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </button>
-                    {faqOpen === i && (
-                      <div id={`unlock-faq-answer-${i}`} className="unlock-faq-answer">{faq.a}</div>
-                    )}
-                  </div>
-
-                  {i === 0 && ads.faq.length > 0 && (
-                    <div className="unlock-faq-ad">
-                      <BoxAd ad={ads.faq[0]} />
-                    </div>
+                <div key={faq.q} className={`unlock-faq-item ${faqOpen === i ? "is-open" : ""}`}>
+                  <button
+                    onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                    aria-expanded={faqOpen === i}
+                    aria-controls={`unlock-faq-answer-${i}`}
+                  >
+                    <span>{faq.q}</span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 9 5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </button>
+                  {faqOpen === i && (
+                    <div id={`unlock-faq-answer-${i}`} className="unlock-faq-answer">{faq.a}</div>
                   )}
-                </Fragment>
+                </div>
               ))}
             </div>
           </section>
@@ -650,6 +633,10 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
 
       {ads.social.length > 0 && !bottomBarClosed && (
         <SocialAdBar ad={ads.social[0]} onClose={() => setBottomBarClosed(true)} />
+      )}
+
+      {interstitialOpen && ads.interstitial[0] && (
+        <InterstitialAd ad={ads.interstitial[0]} onContinue={revealReward} />
       )}
     </div>
   );

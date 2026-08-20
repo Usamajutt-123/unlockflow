@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Ad } from "@/lib/types";
 
 function AdLabel() {
@@ -70,15 +70,11 @@ function ScriptAd({ ad, className }: { ad: Ad; className?: string }) {
   return <div ref={ref} className={className} />;
 }
 
-/** A clean, labeled frame used to host script ads so they look tidy on the page. */
-function ScriptFrame({ ad, className }: { ad: Ad; className?: string }) {
+/** Quiet host for network scripts — no dashed empty placeholder box. */
+function NativeHost({ ad }: { ad: Ad }) {
   return (
-    <div
-      className={`unlock-script-frame relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-3 py-3 dark:border-night-600 dark:bg-night-800/40 ${
-        className || ""
-      }`}
-    >
-      <span className="absolute right-2 top-2 z-10">
+    <div className="unlock-native-host">
+      <span className="unlock-native-label">
         <AdLabel />
       </span>
       <ScriptAd ad={ad} className="ad-host" />
@@ -86,10 +82,10 @@ function ScriptFrame({ ad, className }: { ad: Ad; className?: string }) {
   );
 }
 
-/** Full-width banner ad shown below the unlock-page hero (image or script). */
+/** Native / In-Page Push shown below the unlock-page hero. */
 export function BannerAd({ ad }: { ad: Ad }) {
   if (isScript(ad)) {
-    return <ScriptFrame ad={ad} />;
+    return <NativeHost ad={ad} />;
   }
 
   const content = (
@@ -133,14 +129,14 @@ export function BannerAd({ ad }: { ad: Ad }) {
   );
 }
 
-/** Compact ad rendered inside the task list (image or script). */
+/** Native unit rendered once inside the task list. */
 export function InlineAd({ ad }: { ad: Ad }) {
   if (isScript(ad)) {
-    return <ScriptFrame ad={ad} />;
+    return <NativeHost ad={ad} />;
   }
 
   const content = (
-    <div className="unlock-inline-ad group relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-night-600 dark:bg-night-800/40 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/5">
+    <div className="unlock-inline-ad group relative overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-brand-300 dark:border-night-600 dark:bg-night-800/40 dark:hover:border-brand-500/40">
       <div className="flex items-center gap-3 px-3.5 py-3">
         <AdImage ad={ad} className="h-11 w-11 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
@@ -167,41 +163,43 @@ export function InlineAd({ ad }: { ad: Ad }) {
   );
 }
 
-/** Compact "box" ad used for the task-center, above-unlock and FAQ slots. */
-export function BoxAd({ ad }: { ad: Ad }) {
-  if (isScript(ad)) {
-    return <ScriptFrame ad={ad} />;
-  }
+/** Interstitial shown only after the visitor taps Unlock Reward. */
+export function InterstitialAd({ ad, onContinue }: { ad: Ad; onContinue: () => void }) {
+  const [ready, setReady] = useState(false);
 
-  const content = (
-    <div className="unlock-box-ad group relative overflow-hidden rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-night-600 dark:bg-night-800/40 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/5">
-      <div className="flex items-center gap-3 px-3.5 py-3">
-        <AdImage ad={ad} className="h-11 w-11 shrink-0 rounded-xl" />
-        <div className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
-            {ad.title || "Sponsored"}
-          </span>
-          {ad.link_url && (
-            <span className="block truncate text-xs text-brand-600 dark:text-brand-400">
-              {ad.link_url.replace(/^https?:\/\//, "")} →
-            </span>
-          )}
-        </div>
-        <AdLabel />
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 2500);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="unlock-interstitial" role="dialog" aria-modal="true" aria-label="Advertisement">
+      <div className="unlock-interstitial-card">
+        <span className="unlock-interstitial-label">
+          <AdLabel />
+        </span>
+        {isScript(ad) ? (
+          <ScriptAd ad={ad} className="ad-host" />
+        ) : ad.link_url ? (
+          <a href={ad.link_url} target="_blank" rel="noreferrer sponsored" className="block">
+            <AdImage ad={ad} className="mx-auto max-h-64 w-full rounded-xl object-contain" />
+            {ad.title && <span className="mt-2 block text-center text-sm font-semibold">{ad.title}</span>}
+          </a>
+        ) : (
+          <div className="text-center">
+            <AdImage ad={ad} className="mx-auto h-16 w-16 rounded-xl" />
+            {ad.title && <span className="mt-2 block text-sm font-semibold">{ad.title}</span>}
+          </div>
+        )}
+        <button type="button" className="unlock-interstitial-continue" onClick={onContinue} disabled={!ready}>
+          {ready ? "Continue to reward" : "Please wait…"}
+        </button>
       </div>
     </div>
   );
-
-  return ad.link_url ? (
-    <a href={ad.link_url} target="_blank" rel="noreferrer sponsored" className="block">
-      {content}
-    </a>
-  ) : (
-    content
-  );
 }
 
-/** Fixed bottom "social bar" ad with a close button (image or script). */
+/** Fixed bottom sticky bar with a close button (image or script). */
 export function SocialAdBar({ ad, onClose }: { ad: Ad; onClose: () => void }) {
   return (
     <div className="unlock-social-ad fixed inset-x-0 bottom-0 z-40 p-3 sm:p-4">
@@ -214,7 +212,7 @@ export function SocialAdBar({ ad, onClose }: { ad: Ad; onClose: () => void }) {
             <ScriptAd ad={ad} className="ad-host" />
           </div>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 px-3 py-2.5 pr-10">
             <AdImage ad={ad} className="h-10 w-10 shrink-0 rounded-lg" />
             <div className="min-w-0 flex-1">
               <span className="block truncate text-sm font-bold text-slate-800 dark:text-white">
@@ -235,11 +233,7 @@ export function SocialAdBar({ ad, onClose }: { ad: Ad; onClose: () => void }) {
               >
                 Open <span aria-hidden>→</span>
               </a>
-            ) : (
-              <span className="hidden shrink-0 rounded-full bg-brand-600 px-3 py-1.5 text-xs font-bold text-white sm:flex">
-                Open <span aria-hidden>→</span>
-              </span>
-            )}
+            ) : null}
             <span className="shrink-0">
               <AdLabel />
             </span>

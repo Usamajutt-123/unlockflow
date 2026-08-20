@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { Ad, AdSlot } from "@/lib/types";
-import { AD_SLOTS, AD_SLOT_LABELS } from "@/lib/types";
+import { AD_SLOTS, AD_SLOT_LABELS, AD_SLOT_HINTS } from "@/lib/types";
 import { Alert, ConfirmDialog, type ConfirmState } from "../Alerts";
 
 interface Props {
@@ -65,7 +65,7 @@ export default function AdsManager({ token, auth }: Props) {
     };
     return (
       <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles[slot]}`}>
-        {slot}
+        {slot === "above_unlock" ? "interstitial" : slot === "social" ? "sticky" : slot === "banner" ? "native" : slot}
       </span>
     );
   };
@@ -76,8 +76,8 @@ export default function AdsManager({ token, auth }: Props) {
         <div>
           <h2 className="font-display text-xl font-bold text-ink dark:text-white">Ads</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Control every ad on unlock pages. Paste Adsterra / Monetag script codes (or use an image banner) and place
-            it in any slot — turn each one on or off anytime.
+            Paste Monetag / Adsterra codes onto unlock pages: Native or In-Page Push below the header, Native in the
+            task list, Interstitial on Unlock Reward, and a sticky bar at the bottom.
           </p>
         </div>
         <button onClick={() => setEditing({} as Ad)} className="btn-primary !py-2 !text-xs">
@@ -163,7 +163,7 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
     title: props.initial.title || "",
     image_url: props.initial.image_url || "",
     link_url: props.initial.link_url || "",
-    type: props.initial.type || "image",
+    type: props.initial.type || (props.initial.id ? "image" : "script"),
     script: props.initial.script || "",
     active: props.initial.active ?? true,
     created_at: props.initial.created_at || "",
@@ -212,8 +212,13 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
           <div>
             <label className="label">Placement *</label>
             <select value={form.slot} onChange={(e) => set("slot", e.target.value)} className="field">
-              {AD_SLOTS.map((s) => <option key={s} value={s}>{AD_SLOT_LABELS[s]}</option>)}
+              {(AD_SLOTS.includes(form.slot) ? AD_SLOTS : [form.slot, ...AD_SLOTS]).map((s) => (
+                <option key={s} value={s}>{AD_SLOT_LABELS[s]}</option>
+              ))}
             </select>
+            {AD_SLOT_HINTS[form.slot] && (
+              <p className="mt-1 text-xs text-slate-400">{AD_SLOT_HINTS[form.slot]}</p>
+            )}
           </div>
 
           <div>
@@ -254,7 +259,7 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
                 placeholder={'<script type="text/javascript" src="https://…"></script>'}
               />
               <p className="mt-1 text-xs text-slate-400">
-                Paste the full ad code from Adsterra, Monetag, or any network. It will render live on the unlock page.
+                Paste the full Native, In-Page Push, Interstitial, or sticky code from Monetag or Adsterra.
               </p>
               <div className="mt-2">
                 <label className="label">Label (optional)</label>
