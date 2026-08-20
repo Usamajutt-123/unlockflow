@@ -22,10 +22,6 @@ const faqs = [
     q: "What are the advanced options?",
     a: "They are fully optional: page title, description, banner image, icon image, an access password, an expiry date, and a custom short slug for your link.",
   },
-  {
-    q: "Where is my data stored?",
-    a: "Everything is stored securely in your own Supabase database. You own your links, tasks, and completions completely.",
-  },
 ];
 
 export default function Faq() {

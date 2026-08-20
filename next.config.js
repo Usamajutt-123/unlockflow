@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  // Allow the live preview host (e2b.app) to load /_next dev resources.
+  allowedDevOrigins: ["*.e2b.app", "localhost:3000"],
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
