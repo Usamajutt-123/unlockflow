@@ -105,8 +105,8 @@ export default function UnlockPreview({
         </div>
 
         <div className="unlock-preview-ad">
-          <small>Advertisement</small>
-          <span>Premium Ad Space</span>
+          <small>Ad</small>
+          <span>Native / In-Page Push</span>
         </div>
 
         <section className="unlock-tasks-section">
@@ -150,11 +150,6 @@ export default function UnlockPreview({
             })}
           </ul>
         </section>
-
-        <div className="unlock-preview-ad unlock-preview-ad-bottom">
-          <small>Advertisement</small>
-          <span>Premium Ad Space</span>
-        </div>
 
         <div className="unlock-reward-section">
           <button type="button" disabled={!showReward} className="unlock-main-button">

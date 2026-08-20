@@ -81,21 +81,26 @@ export type AdSlot =
   | "above_unlock"
   | "faq"
   | "social";
+/** Slots shown in admin — values stay on the existing ads table (no new migration). */
 export const AD_SLOTS: AdSlot[] = [
   "banner",
   "task",
-  "task_center",
   "above_unlock",
-  "faq",
   "social",
 ];
 export const AD_SLOT_LABELS: Record<AdSlot, string> = {
-  banner: "Banner (below header)",
-  task: "In-task (inside task list)",
-  task_center: "Task center (middle of tasks)",
-  above_unlock: "Above unlock button",
-  faq: "FAQ section",
-  social: "Social bar (fixed bottom)",
+  banner: "Native / In-Page Push (below header)",
+  task: "Native (inside task list)",
+  task_center: "Task center (legacy)",
+  above_unlock: "Interstitial (on Unlock Reward)",
+  faq: "FAQ (legacy)",
+  social: "Sticky bar (fixed bottom)",
+};
+export const AD_SLOT_HINTS: Partial<Record<AdSlot, string>> = {
+  banner: "Paste a Monetag or Adsterra Native / In-Page Push code. It shows below the header.",
+  task: "Paste a Native unit. It shows once inside the task list.",
+  above_unlock: "Paste an Interstitial code. It only fires when the visitor taps Unlock Reward.",
+  social: "Paste In-Page Push or a sticky/social-bar code. Fixed at the bottom, with a close button.",
 };
 
 export type AdType = "image" | "script";

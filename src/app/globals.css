@@ -845,33 +845,63 @@ body {
 
 .unlock-ad-slot { padding: 15px 24px 0; }
 .unlock-banner-slot { padding-bottom: 1px; }
-.unlock-banner-slot .unlock-banner-ad,
-.unlock-banner-slot .unlock-script-frame { min-height: 55px; }
+.unlock-native-host { position: relative; width: 100%; min-width: 0; overflow: hidden; }
+.unlock-native-label { position: absolute; right: 6px; top: 6px; z-index: 2; pointer-events: none; }
 .unlock-shell .unlock-banner-ad,
-.unlock-shell .unlock-inline-ad,
-.unlock-shell .unlock-box-ad,
-.unlock-shell .unlock-script-frame {
+.unlock-shell .unlock-inline-ad {
   border-color: var(--uf-line) !important;
   border-radius: 7px !important;
   background: var(--uf-surface-soft) !important;
   box-shadow: none !important;
 }
-.unlock-shell .unlock-inline-ad:hover,
-.unlock-shell .unlock-box-ad:hover { border-color: var(--uf-line-strong) !important; }
+.unlock-shell .unlock-inline-ad:hover { border-color: var(--uf-line-strong) !important; }
 .unlock-shell .unlock-inline-ad .text-slate-700,
-.unlock-shell .unlock-box-ad .text-slate-700,
 .unlock-shell .unlock-banner-ad .text-slate-700 { color: var(--uf-surface-text) !important; }
-.unlock-shell .unlock-inline-ad .text-brand-600,
-.unlock-shell .unlock-box-ad .text-brand-600 { color: var(--uf-accent) !important; }
+.unlock-shell .unlock-inline-ad .text-brand-600 { color: var(--uf-accent) !important; }
 .unlock-shell .unlock-ad-label {
   border-color: var(--uf-line) !important;
   color: var(--uf-muted) !important;
   background: var(--uf-panel) !important;
 }
-.unlock-shell .unlock-script-frame { min-width: 0; overflow-x: auto; }
 .unlock-shell .ad-host { max-width: 100%; overflow: hidden; }
 .unlock-shell .ad-host iframe,
 .unlock-shell .ad-host img { max-width: 100% !important; }
+
+.unlock-interstitial {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(8px);
+}
+.unlock-interstitial-card {
+  position: relative;
+  width: min(100%, 420px);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 18px 16px 16px;
+  border: 1px solid var(--uf-line);
+  border-radius: 12px;
+  background: var(--uf-surface);
+  color: var(--uf-surface-text);
+  box-shadow: var(--uf-shadow);
+}
+.unlock-interstitial-label { position: absolute; right: 10px; top: 10px; z-index: 2; }
+.unlock-interstitial-continue {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 14px;
+  border-radius: 8px;
+  color: var(--uf-button-text);
+  background: var(--uf-button);
+  font-size: 12px;
+  font-weight: 800;
+}
+.unlock-interstitial-continue:disabled { opacity: 0.65; cursor: wait; }
 
 .unlock-tasks-section { padding: 17px 24px 0; }
 .unlock-section-heading { display: flex; align-items: center; gap: 9px; min-height: 30px; margin-bottom: 9px; }
@@ -962,11 +992,6 @@ body {
 .unlock-task-step.is-done .unlock-task-action { border-color: rgba(34, 197, 94, .55); color: var(--uf-success); background: rgba(34, 197, 94, .08); }
 .unlock-task-step.is-done > button { border-color: color-mix(in srgb, var(--uf-success) 30%, var(--uf-line)); }
 .unlock-list-ad { min-width: 0; margin: 2px 0; }
-.unlock-list-ad .unlock-inline-ad,
-.unlock-list-ad .unlock-box-ad,
-.unlock-list-ad .unlock-script-frame { min-height: 51px; }
-
-.unlock-before-button-ad { padding-top: 12px; }
 .unlock-reward-section { padding: 12px 24px 0; }
 .unlock-password-field { margin-bottom: 10px; }
 .unlock-password-field > label { display: block; margin-bottom: 5px; color: var(--uf-text); font-size: 9px; font-weight: 750; }
@@ -1033,7 +1058,6 @@ body {
 .unlock-faq-item > button svg { width: 13px; height: 13px; flex: 0 0 auto; color: var(--uf-accent); transition: transform .2s ease; }
 .unlock-faq-item.is-open > button svg { transform: rotate(180deg); }
 .unlock-faq-answer { padding: 0 10px 10px; color: var(--uf-muted); font-size: 8.5px; line-height: 1.55; }
-.unlock-faq-ad { margin: 1px 0; }
 
 .unlock-powered-by { display: flex; align-items: center; justify-content: center; gap: 5px; margin: 14px 24px 0; padding-top: 11px; border-top: 1px solid var(--uf-line); color: var(--uf-muted); font-size: 8px; }
 .unlock-powered-by a { display: inline-flex; align-items: center; gap: 4px; color: var(--uf-text); }
@@ -1137,12 +1161,9 @@ body {
   .unlock-task-copy small { font-size: 7px; }
   .unlock-task-action { min-width: 56px; min-height: 23px; padding: 4px 6px; font-size: 7px; }
   .unlock-task-action svg { width: 9px; height: 9px; }
-  .unlock-list-ad .unlock-inline-ad > div,
-  .unlock-list-ad .unlock-box-ad > div { gap: 7px; padding: 8px; }
-  .unlock-list-ad .unlock-inline-ad img,
-  .unlock-list-ad .unlock-box-ad img { width: 34px; height: 34px; }
+  .unlock-list-ad .unlock-inline-ad > div { gap: 7px; padding: 8px; }
+  .unlock-list-ad .unlock-inline-ad img { width: 34px; height: 34px; }
 
-  .unlock-before-button-ad { padding-top: 10px; }
   .unlock-reward-section { padding: 10px 13px 0; }
   .unlock-main-button { min-height: 41px; padding: 0 35px 0 10px; font-size: 9px; }
   .unlock-main-button > svg:first-child { width: 15px; height: 15px; }
