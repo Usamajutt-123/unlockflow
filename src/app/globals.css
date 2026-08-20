@@ -1227,3 +1227,53 @@ body {
 .unlock-preview-shell .unlock-main-button { min-height: 34px; font-size: 8px; }
 .unlock-preview-powered { padding: 9px 12px 11px; color: var(--uf-muted); text-align: center; font-size: 6.5px; }
 .unlock-preview-powered strong { color: var(--uf-accent); }
+
+/* =====================================================================
+   Custom alerts & dialogs  (alert styling only)
+   Animations for <Alert> / <ConfirmDialog> / <InputDialog> and the
+   unlock-page password error alert (.uf-unlock-alert).
+   ===================================================================== */
+@keyframes uf-alert-in {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes uf-dialog-pop {
+  0% { opacity: 0; transform: translateY(14px) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes uf-backdrop-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes uf-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.uf-alert { animation: uf-alert-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.uf-dialog-backdrop { animation: uf-backdrop-in 0.18s ease-out both; }
+.uf-dialog-card { animation: uf-dialog-pop 0.26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Unlock page — password error alert (works with every unlock theme) */
+.uf-unlock-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  animation: uf-alert-in 0.25s ease-out both, uf-shake 0.45s ease-in-out 0.12s;
+}
+/* darker red text for the light unlock themes */
+.unlock-shell[data-unlock-theme="clean"] .uf-unlock-alert,
+.unlock-shell[data-unlock-theme="minimal"] .uf-unlock-alert {
+  color: #e11d48;
+  background: rgba(244, 63, 94, 0.08);
+}

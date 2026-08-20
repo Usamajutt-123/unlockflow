@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Background from "../Background";
 import Logo from "../Logo";
+import { Alert } from "../Alerts";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -60,9 +61,7 @@ export default function AdminLogin() {
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
-                {error}
-              </div>
+              <Alert variant="error">{error}</Alert>
             )}
 
             <button type="submit" disabled={loading} className="btn-primary w-full !py-3.5 disabled:opacity-60">

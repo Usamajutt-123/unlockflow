@@ -531,7 +531,15 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
                     placeholder="Password"
                   />
                 </div>
-                {passError && <p role="alert">{passError}</p>}
+                {passError && (
+                  <span role="alert" className="uf-unlock-alert">
+                    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                      <path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    {passError}
+                  </span>
+                )}
               </div>
             )}
 
