@@ -5,6 +5,7 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { TASK_OPTIONS, getTaskOption, randomSlug, hashPassword, slugify } from "@/lib/tasks";
 import type { Task, GeneratedResult } from "@/lib/types";
 import { BrandIcon } from "./brandIcons";
+import { Alert } from "./Alerts";
 import { THEMES } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
 
@@ -564,13 +565,9 @@ export default function LinkGenerator() {
               </div>
 
               {error && (
-                <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400">
-                  <svg className="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-                    <path d="M12 8v5m0 3v.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
+                <Alert variant="error" className="mt-4">
                   {error}
-                </div>
+                </Alert>
               )}
 
               <button onClick={generate} disabled={generating} className="btn-primary mt-4 w-full !py-4 !text-base disabled:opacity-60">
@@ -593,12 +590,9 @@ export default function LinkGenerator() {
               </button>
 
               {!isSupabaseConfigured && (
-                <p className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  Supabase not configured. Add your keys in .env.local — links won't persist until you do.
-                </p>
+                <Alert variant="warning" className="mt-3" title="Supabase not configured">
+                  <span className="text-xs">Add your keys in .env.local — links won&apos;t persist until you do.</span>
+                </Alert>
               )}
 
               {result && (

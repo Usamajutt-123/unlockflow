@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import type { Ad, AdSlot } from "@/lib/types";
 import { AD_SLOTS, AD_SLOT_LABELS } from "@/lib/types";
+import { Alert, ConfirmDialog, type ConfirmState } from "../Alerts";
 
 interface Props {
   token: string;
@@ -14,6 +15,7 @@ export default function AdsManager({ token, auth }: Props) {
   const [editing, setEditing] = useState<Ad | null>(null);
   const [notice, setNotice] = useState("");
   const [err, setErr] = useState("");
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
 
   const flash = (m: string) => { setNotice(m); setTimeout(() => setNotice(""), 3000); };
 
@@ -24,8 +26,17 @@ export default function AdsManager({ token, auth }: Props) {
       .finally(() => setLoading(false));
   }, [token]);
 
-  const remove = async (id: string) => {
-    if (!confirm("Delete this ad?")) return;
+  const remove = (id: string) => {
+    setConfirmState({
+      title: "Delete this ad?",
+      message: "It will be removed from every unlock page.",
+      confirmLabel: "Delete",
+      tone: "danger",
+      action: () => doRemoveAd(id),
+    });
+  };
+
+  const doRemoveAd = async (id: string) => {
     const r = await fetch(`/api/admin/ads/${id}`, { method: "DELETE", headers: auth });
     if (r.ok) { setAds((as) => as.filter((a) => a.id !== id)); flash("Ad deleted"); }
     else flash("Failed to delete ad");
@@ -74,8 +85,8 @@ export default function AdsManager({ token, auth }: Props) {
         </button>
       </div>
 
-      {notice && <div className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">{notice}</div>}
-      {err && <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">{err}</div>}
+      {notice && <Alert variant="success" className="mb-4">{notice}</Alert>}
+      {err && <Alert variant="error" className="mb-4">{err}</Alert>}
 
       {editing && (
         <AdForm
@@ -139,6 +150,8 @@ export default function AdsManager({ token, auth }: Props) {
           ))}
         </div>
       )}
+
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }
@@ -193,7 +206,7 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
           </button>
         </div>
 
-        {err && <div className="mb-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{err}</div>}
+        {err && <Alert variant="error" className="mb-3">{err}</Alert>}
 
         <div className="space-y-3">
           <div>

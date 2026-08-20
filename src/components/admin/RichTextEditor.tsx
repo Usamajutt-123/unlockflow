@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { InputDialog, type InputState } from "../Alerts";
 
 // A professional rich-text editor built on contentEditable.
 // Toolbar: Paragraph, H1-H4, Bold, Italic, Underline, Strikethrough,
@@ -18,6 +19,13 @@ function exec(command: string, value?: string) {
 export default function RichTextEditor({ value, onChange, placeholder }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const firstRun = useRef(true);
+  const [input, setInput] = useState<InputState | null>(null);
+  const [inputKey, setInputKey] = useState(0);
+
+  const openInput = (state: InputState) => {
+    setInputKey((k) => k + 1);
+    setInput(state);
+  };
 
   // seed content on first mount (don't clobber user edits on re-render)
   useEffect(() => {
@@ -44,37 +52,75 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
   };
 
   const addLink = () => {
-    const url = prompt("Enter link URL (https://...)");
-    if (url) { exec("createLink", url); emit(); }
+    openInput({
+      label: "Enter link URL (https://...)",
+      placeholder: "https://your-link.com",
+      confirmLabel: "Insert",
+      submit: (url) => {
+        if (url) { exec("createLink", url); emit(); }
+        setInput(null);
+      },
+    });
   };
 
   const addImage = () => {
-    const url = prompt("Enter image URL");
-    if (url) insertAtSelection(`<img src="${url}" alt="" class="rte-img" />`);
+    openInput({
+      label: "Enter image URL",
+      placeholder: "https://…/image.jpg",
+      confirmLabel: "Insert",
+      submit: (url) => {
+        if (url) insertAtSelection(`<img src="${url}" alt="" class="rte-img" />`);
+        setInput(null);
+      },
+    });
   };
 
   const addVideo = () => {
-    const url = prompt("Enter video URL (YouTube/Vimeo)");
-    if (!url) return;
-    let embed = url;
-    const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
-    if (yt) embed = `https://www.youtube.com/embed/${yt[1]}`;
-    insertAtSelection(
-      `<div class="rte-video"><iframe src="${embed}" allowfullscreen frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`
-    );
+    openInput({
+      label: "Enter video URL (YouTube/Vimeo)",
+      placeholder: "https://youtube.com/watch?v=…",
+      confirmLabel: "Embed",
+      submit: (url) => {
+        setInput(null);
+        if (!url) return;
+        let embed = url;
+        const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+        if (yt) embed = `https://www.youtube.com/embed/${yt[1]}`;
+        insertAtSelection(
+          `<div class="rte-video"><iframe src="${embed}" allowfullscreen frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`
+        );
+      },
+    });
   };
 
   const addTable = () => {
-    const rows = parseInt(prompt("Rows?", "3") || "3", 10);
-    const cols = parseInt(prompt("Columns?", "3") || "3", 10);
-    let html = "<table class='rte-table'><tbody>";
-    for (let i = 0; i < rows; i++) {
-      html += "<tr>";
-      for (let j = 0; j < cols; j++) html += "<td>&nbsp;</td>";
-      html += "</tr>";
-    }
-    html += "</tbody></table>";
-    insertAtSelection(html);
+    openInput({
+      label: "How many rows?",
+      placeholder: "3",
+      defaultValue: "3",
+      confirmLabel: "Next",
+      submit: (rowsRaw) => {
+        const rows = Math.min(30, Math.max(1, parseInt(rowsRaw, 10) || 3));
+        openInput({
+          label: "How many columns?",
+          placeholder: "3",
+          defaultValue: "3",
+          confirmLabel: "Insert",
+          submit: (colsRaw) => {
+            const cols = Math.min(12, Math.max(1, parseInt(colsRaw, 10) || 3));
+            let html = "<table class='rte-table'><tbody>";
+            for (let i = 0; i < rows; i++) {
+              html += "<tr>";
+              for (let j = 0; j < cols; j++) html += "<td>&nbsp;</td>";
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+            insertAtSelection(html);
+            setInput(null);
+          },
+        });
+      },
+    });
   };
 
   const toolbar = [
@@ -122,6 +168,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
         onBlur={emit}
       />
       {placeholder && <div className="px-2 py-1 text-[10px] text-slate-400">Toolbar formatting is applied to selected text.</div>}
+      <InputDialog state={input} resetKey={inputKey} onClose={() => setInput(null)} />
     </div>
   );
 }

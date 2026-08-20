@@ -4,6 +4,7 @@ import type { BlogPost } from "@/lib/types";
 import { POST_CATEGORIES, POST_TYPES } from "@/lib/types";
 import { slugify } from "@/lib/tasks";
 import RichTextEditor from "./RichTextEditor";
+import { Alert, ConfirmDialog, type ConfirmState } from "../Alerts";
 
 interface Props {
   token: string;
@@ -15,6 +16,7 @@ export default function BlogManager({ token, auth }: Props) {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<BlogPost | null>(null);
   const [notice, setNotice] = useState("");
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
 
   const flash = (m: string) => { setNotice(m); setTimeout(() => setNotice(""), 3000); };
 
@@ -25,8 +27,17 @@ export default function BlogManager({ token, auth }: Props) {
       .finally(() => setLoading(false));
   }, [token]);
 
-  const remove = async (slug: string) => {
-    if (!confirm("Delete this post?")) return;
+  const remove = (slug: string) => {
+    setConfirmState({
+      title: "Delete this post?",
+      message: "This post will be permanently removed.",
+      confirmLabel: "Delete",
+      tone: "danger",
+      action: () => doRemovePost(slug),
+    });
+  };
+
+  const doRemovePost = async (slug: string) => {
     const r = await fetch(`/api/blog/${slug}`, { method: "DELETE", headers: auth });
     if (r.ok) { setPosts((ps) => ps.filter((p) => p.slug !== slug)); flash("Deleted"); }
     else flash("Failed to delete");
@@ -44,7 +55,7 @@ export default function BlogManager({ token, auth }: Props) {
         </button>
       </div>
 
-      {notice && <div className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">{notice}</div>}
+      {notice && <Alert variant="success" className="mb-4">{notice}</Alert>}
 
       {editing && (
         <PostForm
@@ -98,6 +109,8 @@ export default function BlogManager({ token, auth }: Props) {
           ))}
         </div>
       )}
+
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }
@@ -173,7 +186,7 @@ function PostForm(props: {
           </button>
         </div>
 
-        {err && <div className="mb-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{err}</div>}
+        {err && <Alert variant="error" className="mb-3">{err}</Alert>}
 
         <div className="space-y-3">
           {/* basics */}

@@ -4,6 +4,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { getTaskOption, hashPassword } from "@/lib/tasks";
 import { BrandIcon } from "../brandIcons";
+import { Alert, ConfirmDialog, type ConfirmState } from "../Alerts";
 import Logo from "../Logo";
 import { THEMES } from "@/lib/themes";
 import dynamic from "next/dynamic";
@@ -49,6 +50,7 @@ export default function AdminDashboard({ session }: { session: Session }) {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [apiError, setApiError] = useState("");
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
 
   const auth = { authorization: `Bearer ${token}` };
 
@@ -95,8 +97,17 @@ export default function AdminDashboard({ session }: { session: Session }) {
     else flash("Failed to update link");
   };
 
-  const deleteLink = async (id: string) => {
-    if (!confirm("Delete this link and all its tasks?")) return;
+  const deleteLink = (id: string) => {
+    setConfirmState({
+      title: "Delete this link?",
+      message: "This will permanently remove the link and all of its tasks.",
+      confirmLabel: "Delete",
+      tone: "danger",
+      action: () => removeLink(id),
+    });
+  };
+
+  const removeLink = async (id: string) => {
     const r = await fetch(`/api/admin/links/${id}`, { method: "DELETE", headers: auth });
     if (r.ok) { setLinks((ls) => ls.filter((l) => l.id !== id)); flash("Link deleted"); }
     else flash("Failed to delete link");
@@ -156,8 +167,17 @@ export default function AdminDashboard({ session }: { session: Session }) {
     else flash(j.error || "Failed to add admin");
   };
 
-  const removeAdmin = async (email: string) => {
-    if (!confirm(`Remove ${email} as admin?`)) return;
+  const removeAdmin = (email: string) => {
+    setConfirmState({
+      title: "Remove admin?",
+      message: `${email} will lose access to this dashboard.`,
+      confirmLabel: "Remove",
+      tone: "danger",
+      action: () => doRemoveAdmin(email),
+    });
+  };
+
+  const doRemoveAdmin = async (email: string) => {
     const r = await fetch(`/api/admin/admins/${encodeURIComponent(email)}`, { method: "DELETE", headers: auth });
     const j = await r.json();
     if (r.ok) { setAdmins((a) => a.filter((x) => x.email !== email)); flash("Admin removed"); }
@@ -191,22 +211,17 @@ export default function AdminDashboard({ session }: { session: Session }) {
       </header>
 
       <main className="container-x py-8">
-        {notice && <div className="mb-5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400">{notice}</div>}
+        {notice && <Alert variant="success" className="mb-5">{notice}</Alert>}
 
         {apiError && (
-          <div className="mb-5 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-            <svg className="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none">
-              <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <div>
-              <span className="font-semibold">Dashboard API error:</span> {apiError}
-              <p className="mt-1 text-xs opacity-80">
-                If you see &quot;column does not exist&quot; or &quot;relation does not exist&quot;, run the SQL migrations
-                (supabase/migrations) in your Supabase SQL editor. If you see &quot;Unauthorized&quot;, make sure your email is in the
-                admins table or matches SUPERADMIN_EMAIL.
-              </p>
-            </div>
-          </div>
+          <Alert variant="warning" title="Dashboard API error" className="mb-5">
+            {apiError}
+            <p className="mt-1 text-xs opacity-80">
+              If you see &quot;column does not exist&quot; or &quot;relation does not exist&quot;, run the SQL migrations
+              (supabase/migrations) in your Supabase SQL editor. If you see &quot;Unauthorized&quot;, make sure your email is in the
+              admins table or matches SUPERADMIN_EMAIL.
+            </p>
+          </Alert>
         )}
 
         {loading ? (
@@ -302,6 +317,8 @@ export default function AdminDashboard({ session }: { session: Session }) {
           </>
         )}
       </main>
+
+      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
     </div>
   );
 }
