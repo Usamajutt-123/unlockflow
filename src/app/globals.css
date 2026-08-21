@@ -612,7 +612,6 @@ body {
   margin: 0 auto;
   padding: 22px 0 34px;
 }
-.unlock-shell-with-social .unlock-page-wrap { padding-bottom: 128px; }
 
 .unlock-frame {
   position: relative;
@@ -847,17 +846,13 @@ body {
 .unlock-banner-slot { padding-bottom: 1px; }
 .unlock-native-host { position: relative; width: 100%; min-width: 0; overflow: hidden; }
 .unlock-native-label { position: absolute; right: 6px; top: 6px; z-index: 2; pointer-events: none; }
-.unlock-shell .unlock-banner-ad,
-.unlock-shell .unlock-inline-ad {
+.unlock-shell .unlock-banner-ad {
   border-color: var(--uf-line) !important;
   border-radius: 7px !important;
   background: var(--uf-surface-soft) !important;
   box-shadow: none !important;
 }
-.unlock-shell .unlock-inline-ad:hover { border-color: var(--uf-line-strong) !important; }
-.unlock-shell .unlock-inline-ad .text-slate-700,
 .unlock-shell .unlock-banner-ad .text-slate-700 { color: var(--uf-surface-text) !important; }
-.unlock-shell .unlock-inline-ad .text-brand-600 { color: var(--uf-accent) !important; }
 .unlock-shell .unlock-ad-label {
   border-color: var(--uf-line) !important;
   color: var(--uf-muted) !important;
@@ -992,6 +987,11 @@ body {
 .unlock-task-step.is-done .unlock-task-action { border-color: rgba(34, 197, 94, .55); color: var(--uf-success); background: rgba(34, 197, 94, .08); }
 .unlock-task-step.is-done > button { border-color: color-mix(in srgb, var(--uf-success) 30%, var(--uf-line)); }
 .unlock-list-ad { min-width: 0; margin: 2px 0; }
+.unlock-reward-ad { margin-bottom: 10px; }
+.unlock-faq-ad { min-width: 0; margin: 4px 0; }
+.unlock-list-ad .unlock-banner-ad img,
+.unlock-reward-ad .unlock-banner-ad img,
+.unlock-faq-ad .unlock-banner-ad img { max-height: 120px; }
 .unlock-reward-section { padding: 12px 24px 0; }
 .unlock-password-field { margin-bottom: 10px; }
 .unlock-password-field > label { display: block; margin-bottom: 5px; color: var(--uf-text); font-size: 9px; font-weight: 750; }
@@ -1068,15 +1068,7 @@ body {
 .unlock-footer a { transition: color .2s ease; }
 .unlock-footer a:hover { color: var(--uf-accent); }
 
-.unlock-shell .unlock-social-ad-inner {
-  border-color: var(--uf-line) !important;
-  color: var(--uf-surface-text);
-  background: color-mix(in srgb, var(--uf-surface) 94%, transparent) !important;
-  box-shadow: 0 -12px 40px rgba(0,0,0,.24), var(--uf-glow) !important;
-}
-.unlock-shell .unlock-social-ad-inner .text-slate-800 { color: var(--uf-surface-text) !important; }
-.unlock-shell .unlock-social-ad-inner .text-brand-600 { color: var(--uf-accent) !important; }
-.unlock-shell .unlock-social-ad-inner a.bg-brand-600 { background: var(--uf-button) !important; color: var(--uf-button-text) !important; }
+
 
 .unlock-shell[data-unlock-theme="creator"] .unlock-task-step > button,
 .unlock-shell[data-unlock-theme="creator"] .unlock-how li,
@@ -1118,7 +1110,7 @@ body {
 
 @media (max-width: 600px) {
   .unlock-page-wrap { width: calc(100% - 14px); padding-top: 7px; padding-bottom: 14px; }
-  .unlock-shell-with-social .unlock-page-wrap { padding-bottom: 108px; }
+
   .unlock-frame { border-radius: 12px; backdrop-filter: blur(12px); }
   .unlock-nav { min-height: 49px; padding: 0 13px; gap: 8px; }
   .unlock-wordmark { gap: 5px; }
@@ -1161,8 +1153,9 @@ body {
   .unlock-task-copy small { font-size: 7px; }
   .unlock-task-action { min-width: 56px; min-height: 23px; padding: 4px 6px; font-size: 7px; }
   .unlock-task-action svg { width: 9px; height: 9px; }
-  .unlock-list-ad .unlock-inline-ad > div { gap: 7px; padding: 8px; }
-  .unlock-list-ad .unlock-inline-ad img { width: 34px; height: 34px; }
+  .unlock-list-ad .unlock-banner-ad img,
+  .unlock-reward-ad .unlock-banner-ad img,
+  .unlock-faq-ad .unlock-banner-ad img { max-height: 96px; }
 
   .unlock-reward-section { padding: 10px 13px 0; }
   .unlock-main-button { min-height: 41px; padding: 0 35px 0 10px; font-size: 9px; }
@@ -1180,8 +1173,6 @@ body {
   .unlock-powered-by { margin-left: 13px; margin-right: 13px; }
   .unlock-footer { min-height: 53px; flex-direction: column; justify-content: center; gap: 5px; padding: 9px 13px; text-align: center; }
   .unlock-footer nav { gap: 14px; }
-  .unlock-social-ad { padding: 7px; }
-  .unlock-social-ad-inner { border-radius: 10px !important; }
 }
 
 @media (max-width: 370px) {

@@ -129,40 +129,6 @@ export function BannerAd({ ad }: { ad: Ad }) {
   );
 }
 
-/** Native unit rendered once inside the task list. */
-export function InlineAd({ ad }: { ad: Ad }) {
-  if (isScript(ad)) {
-    return <NativeHost ad={ad} />;
-  }
-
-  const content = (
-    <div className="unlock-inline-ad group relative overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-brand-300 dark:border-night-600 dark:bg-night-800/40 dark:hover:border-brand-500/40">
-      <div className="flex items-center gap-3 px-3.5 py-3">
-        <AdImage ad={ad} className="h-11 w-11 shrink-0 rounded-xl" />
-        <div className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
-            {ad.title || "Sponsored"}
-          </span>
-          {ad.link_url && (
-            <span className="block truncate text-xs text-brand-600 dark:text-brand-400">
-              {ad.link_url.replace(/^https?:\/\//, "")} →
-            </span>
-          )}
-        </div>
-        <AdLabel />
-      </div>
-    </div>
-  );
-
-  return ad.link_url ? (
-    <a href={ad.link_url} target="_blank" rel="noreferrer sponsored" className="block">
-      {content}
-    </a>
-  ) : (
-    content
-  );
-}
-
 /** Interstitial shown only after the visitor taps Unlock Reward. */
 export function InterstitialAd({ ad, onContinue }: { ad: Ad; onContinue: () => void }) {
   const [ready, setReady] = useState(false);
@@ -199,56 +165,4 @@ export function InterstitialAd({ ad, onContinue }: { ad: Ad; onContinue: () => v
   );
 }
 
-/** Fixed bottom sticky bar with a close button (image or script). */
-export function SocialAdBar({ ad, onClose }: { ad: Ad; onClose: () => void }) {
-  return (
-    <div className="unlock-social-ad fixed inset-x-0 bottom-0 z-40 p-3 sm:p-4">
-      <div className="unlock-social-ad-inner group relative mx-auto max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-[0_-8px_40px_-12px_rgba(16,24,40,0.25)] backdrop-blur dark:border-night-600 dark:bg-night-800/95 dark:shadow-[0_-8px_40px_-12px_rgba(0,0,0,0.6)]">
-        {isScript(ad) ? (
-          <div className="relative px-4 py-3 pr-12">
-            <span className="absolute left-3 top-3 z-10">
-              <AdLabel />
-            </span>
-            <ScriptAd ad={ad} className="ad-host" />
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 px-3 py-2.5 pr-10">
-            <AdImage ad={ad} className="h-10 w-10 shrink-0 rounded-lg" />
-            <div className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-slate-800 dark:text-white">
-                {ad.title || "Sponsored"}
-              </span>
-              {ad.link_url && (
-                <span className="block truncate text-xs text-brand-600 dark:text-brand-400">
-                  {ad.link_url.replace(/^https?:\/\//, "")}
-                </span>
-              )}
-            </div>
-            {ad.link_url ? (
-              <a
-                href={ad.link_url}
-                target="_blank"
-                rel="noreferrer sponsored"
-                className="hidden shrink-0 items-center gap-1 rounded-full bg-brand-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-brand-700 sm:flex"
-              >
-                Open <span aria-hidden>→</span>
-              </a>
-            ) : null}
-            <span className="shrink-0">
-              <AdLabel />
-            </span>
-          </div>
-        )}
-        <button
-          onClick={onClose}
-          aria-label="Close ad"
-          className="absolute right-1.5 top-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-red-50 hover:text-red-500 dark:bg-night-700 dark:text-slate-300 dark:hover:bg-red-500/15 dark:hover:text-red-400"
-        >
-          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  );
-}
+

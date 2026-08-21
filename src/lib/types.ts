@@ -75,32 +75,38 @@ export const POST_CATEGORIES = [
 ] as const;
 
 export type AdSlot =
-  | "banner"
-  | "task"
-  | "task_center"
-  | "above_unlock"
-  | "faq"
-  | "social";
-/** Slots shown in admin — values stay on the existing ads table (no new migration). */
+  | "banner"        // Native / In-Page Push below header (kept)
+  | "task"          // Banner above the unlock button (slot reused)
+  | "task_center"   // Banner — middle of the task list
+  | "above_unlock"  // Popup ad on the Unlock Reward button
+  | "faq"           // Banner — center of the FAQ
+  | "social";       // Banner — bottom of the page (slot reused)
+/** All six slots already exist in the ads table (migrations 0007/0008), so
+ *  no new migration is needed. The old "task" and "social" placements are
+ *  simply reused as banner placements. */
 export const AD_SLOTS: AdSlot[] = [
   "banner",
-  "task",
   "above_unlock",
+  "task_center",
+  "task",
+  "faq",
   "social",
 ];
 export const AD_SLOT_LABELS: Record<AdSlot, string> = {
   banner: "Native / In-Page Push (below header)",
-  task: "Native (inside task list)",
-  task_center: "Task center (legacy)",
-  above_unlock: "Interstitial (on Unlock Reward)",
-  faq: "FAQ (legacy)",
-  social: "Sticky bar (fixed bottom)",
+  task: "Banner (above unlock button)",
+  task_center: "Banner (middle of task list)",
+  above_unlock: "Popup ad (on Unlock Reward)",
+  faq: "Banner (center of FAQ)",
+  social: "Banner (bottom of page)",
 };
 export const AD_SLOT_HINTS: Partial<Record<AdSlot, string>> = {
   banner: "Paste a Monetag or Adsterra Native / In-Page Push code. It shows below the header.",
-  task: "Paste a Native unit. It shows once inside the task list.",
-  above_unlock: "Paste an Interstitial code. It only fires when the visitor taps Unlock Reward.",
-  social: "Paste In-Page Push or a sticky/social-bar code. Fixed at the bottom, with a close button.",
+  above_unlock: "Popup ad that appears when the visitor taps the Unlock Reward button.",
+  task_center: "Banner shown in the middle of the task list. For links with more than 5 tasks, a second banner from this slot appears lower in the list — create two ads in this slot to show different banners.",
+  task: "Banner shown right above the Unlock Reward button.",
+  faq: "Banner shown in the center of the FAQ section.",
+  social: "Banner shown at the bottom of the unlock page, before the footer.",
 };
 
 export type AdType = "image" | "script";
