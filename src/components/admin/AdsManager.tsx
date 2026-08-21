@@ -57,15 +57,23 @@ export default function AdsManager({ token, auth }: Props) {
   const slotBadge = (slot: AdSlot) => {
     const styles: Record<AdSlot, string> = {
       banner: "bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300",
-      task: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",
-      task_center: "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300",
+      task: "bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+      task_center: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",
       above_unlock: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
       faq: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-      social: "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",
+      social: "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300",
+    };
+    const labels: Record<AdSlot, string> = {
+      banner: "native · below header",
+      task: "banner · above unlock",
+      task_center: "banner · task center",
+      above_unlock: "popup · unlock button",
+      faq: "banner · faq center",
+      social: "banner · bottom",
     };
     return (
       <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles[slot]}`}>
-        {slot === "above_unlock" ? "interstitial" : slot === "social" ? "sticky" : slot === "banner" ? "native" : slot}
+        {labels[slot]}
       </span>
     );
   };
@@ -76,8 +84,8 @@ export default function AdsManager({ token, auth }: Props) {
         <div>
           <h2 className="font-display text-xl font-bold text-ink dark:text-white">Ads</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Paste Monetag / Adsterra codes onto unlock pages: Native or In-Page Push below the header, Native in the
-            task list, Interstitial on Unlock Reward, and a sticky bar at the bottom.
+            Native or In-Page Push below the header, a popup ad on Unlock Reward, and banner placements: middle of the
+            task list, above the unlock button, center of the FAQ, and bottom of the page.
           </p>
         </div>
         <button onClick={() => setEditing({} as Ad)} className="btn-primary !py-2 !text-xs">
@@ -259,7 +267,7 @@ function AdForm(props: { initial: Ad; auth: any; onClose: () => void; onSaved: (
                 placeholder={'<script type="text/javascript" src="https://…"></script>'}
               />
               <p className="mt-1 text-xs text-slate-400">
-                Paste the full Native, In-Page Push, Interstitial, or sticky code from Monetag or Adsterra.
+                Paste the full Native, In-Page Push, popup, or banner code from Monetag or Adsterra.
               </p>
               <div className="mt-2">
                 <label className="label">Label (optional)</label>

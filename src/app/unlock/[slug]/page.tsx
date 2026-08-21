@@ -9,7 +9,7 @@ import Background from "@/components/Background";
 import Logo from "@/components/Logo";
 import { getTheme } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
-import { BannerAd, InlineAd, InterstitialAd, SocialAdBar } from "@/components/ads";
+import { BannerAd, InterstitialAd } from "@/components/ads";
 import Head from "next/head";
 
 const UNLOCK_FAQS = [
@@ -84,18 +84,26 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const [processing, setProcessing] = useState<{ idx: number; phase: "open" | "confirm" } | null>(null);
   const [ads, setAds] = useState<{
     banner: Ad[];
-    task: Ad[];
     interstitial: Ad[];
-    social: Ad[];
-  }>({ banner: [], task: [], interstitial: [], social: [] });
-  const [bottomBarClosed, setBottomBarClosed] = useState(false);
+    task_center: Ad[];
+    unlock_top: Ad[];
+    faq: Ad[];
+    bottom: Ad[];
+  }>({ banner: [], interstitial: [], task_center: [], unlock_top: [], faq: [], bottom: [] });
   const [interstitialOpen, setInterstitialOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(0);
 
   const storageKey = `uf_done_${slug}`;
 
-  // Four placements on the existing ads table: native below header, native in
-  // the task list, interstitial on unlock (slot: above_unlock), sticky bottom.
+  // Ad placements use only slots that already exist in the ads table
+  // (migrations 0007/0008) — no new migration needed:
+  //   banner       -> Native / In-Page Push below the header (kept)
+  //   above_unlock -> Popup ad on the Unlock Reward button (kept)
+  //   task_center  -> Banner in the middle of the task list (a second one is
+  //                   added when the link has more than 5 tasks)
+  //   task         -> Banner above the unlock button (old slot reused)
+  //   faq          -> Banner in the center of the FAQ
+  //   social       -> Banner at the bottom of the page (old slot reused)
   useEffect(() => {
     fetch("/api/ads")
       .then((r) => r.json())
@@ -103,9 +111,11 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
         const all: Ad[] = d.ads || [];
         setAds({
           banner: all.filter((a) => a.slot === "banner"),
-          task: all.filter((a) => a.slot === "task"),
           interstitial: all.filter((a) => a.slot === "above_unlock"),
-          social: all.filter((a) => a.slot === "social"),
+          task_center: all.filter((a) => a.slot === "task_center"),
+          unlock_top: all.filter((a) => a.slot === "task"),
+          faq: all.filter((a) => a.slot === "faq"),
+          bottom: all.filter((a) => a.slot === "social"),
         });
       })
       .catch(() => {});
@@ -321,11 +331,21 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
   const video = parseVideoUrl(link.video_url || "");
   const coverImage = video?.thumbnail || link.banner_url || "";
 
-  const inlineTaskIdx = Math.min(1, tasks.length - 1);
+  // Banner placement inside the task list (slot: task_center).
+  // Up to 5 tasks  -> one banner in the middle.
+  // More than 5 tasks -> the list gets long, so a second banner is added too:
+  // the list is split into thirds and both ads sit around the center. If the
+  // admin created a second ad in this slot, it shows at the lower position.
+  const taskAdIdxA =
+    tasks.length > 5
+      ? Math.max(0, Math.round(tasks.length / 3) - 1)
+      : Math.max(0, Math.floor((tasks.length - 1) / 2));
+  const taskAdIdxB = tasks.length > 5 ? Math.max(0, Math.round((2 * tasks.length) / 3) - 1) : -1;
+  const faqCenterIdx = Math.max(0, Math.floor((UNLOCK_FAQS.length - 1) / 2));
 
   return (
     <div
-      className={`unlock-shell ${ads.social.length > 0 && !bottomBarClosed ? "unlock-shell-with-social" : ""}`}
+      className="unlock-shell"
       data-unlock-theme={th.id}
     >
       <Head>
@@ -494,9 +514,9 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
                       </button>
                     </li>
 
-                    {ads.task.length > 0 && i === inlineTaskIdx && (
+                    {ads.task_center.length > 0 && (i === taskAdIdxA || i === taskAdIdxB) && (
                       <li className="unlock-list-ad">
-                        <InlineAd ad={ads.task[0]} />
+                        <BannerAd ad={i === taskAdIdxB ? ads.task_center[1] ?? ads.task_center[0] : ads.task_center[0]} />
                       </li>
                     )}
                   </Fragment>
@@ -506,6 +526,12 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
           </section>
 
           <section className="unlock-reward-section" aria-label="Unlock reward">
+            {!rewardOpen && ads.unlock_top.length > 0 && (
+              <div className="unlock-reward-ad" aria-label="Advertisement">
+                <BannerAd ad={ads.unlock_top[0]} />
+              </div>
+            )}
+
             {link.has_password && !rewardOpen && (
               <div className="unlock-password-field">
                 <label htmlFor="unlock-password">Enter password to unlock</label>
@@ -595,22 +621,36 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
 
             <div className="unlock-faq-list">
               {UNLOCK_FAQS.map((faq, i) => (
-                <div key={faq.q} className={`unlock-faq-item ${faqOpen === i ? "is-open" : ""}`}>
-                  <button
-                    onClick={() => setFaqOpen(faqOpen === i ? null : i)}
-                    aria-expanded={faqOpen === i}
-                    aria-controls={`unlock-faq-answer-${i}`}
-                  >
-                    <span>{faq.q}</span>
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 9 5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </button>
-                  {faqOpen === i && (
-                    <div id={`unlock-faq-answer-${i}`} className="unlock-faq-answer">{faq.a}</div>
+                <Fragment key={faq.q}>
+                  <div className={`unlock-faq-item ${faqOpen === i ? "is-open" : ""}`}>
+                    <button
+                      onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                      aria-expanded={faqOpen === i}
+                      aria-controls={`unlock-faq-answer-${i}`}
+                    >
+                      <span>{faq.q}</span>
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 9 5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </button>
+                    {faqOpen === i && (
+                      <div id={`unlock-faq-answer-${i}`} className="unlock-faq-answer">{faq.a}</div>
+                    )}
+                  </div>
+
+                  {ads.faq.length > 0 && i === faqCenterIdx && (
+                    <div className="unlock-faq-ad" aria-label="Advertisement">
+                      <BannerAd ad={ads.faq[0]} />
+                    </div>
                   )}
-                </div>
+                </Fragment>
               ))}
             </div>
           </section>
+
+          {ads.bottom.length > 0 && (
+            <div className="unlock-ad-slot" aria-label="Advertisement">
+              <BannerAd ad={ads.bottom[0]} />
+            </div>
+          )}
 
           <div className="unlock-powered-by">
             <span>Powered by</span>
@@ -630,10 +670,6 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
           </footer>
         </section>
       </main>
-
-      {ads.social.length > 0 && !bottomBarClosed && (
-        <SocialAdBar ad={ads.social[0]} onClose={() => setBottomBarClosed(true)} />
-      )}
 
       {interstitialOpen && ads.interstitial[0] && (
         <InterstitialAd ad={ads.interstitial[0]} onContinue={revealReward} />
