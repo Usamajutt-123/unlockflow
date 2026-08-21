@@ -10,6 +10,7 @@ import Logo from "@/components/Logo";
 import { getTheme } from "@/lib/themes";
 import { parseVideoUrl } from "@/lib/thumbnail";
 import { BannerAd, InterstitialAd } from "@/components/ads";
+import { DEFAULT_ADS } from "@/lib/defaultAds";
 import Head from "next/head";
 
 const UNLOCK_FAQS = [
@@ -109,16 +110,36 @@ export default function UnlockPage({ params }: { params: { slug: string } }) {
       .then((r) => r.json())
       .then((d) => {
         const all: Ad[] = d.ads || [];
-        setAds({
+        const grouped = {
           banner: all.filter((a) => a.slot === "banner"),
           interstitial: all.filter((a) => a.slot === "above_unlock"),
           task_center: all.filter((a) => a.slot === "task_center"),
           unlock_top: all.filter((a) => a.slot === "task"),
           faq: all.filter((a) => a.slot === "faq"),
           bottom: all.filter((a) => a.slot === "social"),
+        };
+        // Slots without an active ad in the Ads Manager fall back to the
+        // built-in default ad (Adsterra Native Banner below the header).
+        setAds({
+          banner: grouped.banner.length ? grouped.banner : DEFAULT_ADS.banner,
+          interstitial: grouped.interstitial.length ? grouped.interstitial : DEFAULT_ADS.above_unlock,
+          task_center: grouped.task_center.length ? grouped.task_center : DEFAULT_ADS.task_center,
+          unlock_top: grouped.unlock_top.length ? grouped.unlock_top : DEFAULT_ADS.task,
+          faq: grouped.faq.length ? grouped.faq : DEFAULT_ADS.faq,
+          bottom: grouped.bottom.length ? grouped.bottom : DEFAULT_ADS.social,
         });
       })
-      .catch(() => {});
+      .catch(() => {
+        // If the ads API is unreachable, still show the built-in default ad.
+        setAds({
+          banner: DEFAULT_ADS.banner,
+          interstitial: DEFAULT_ADS.above_unlock,
+          task_center: DEFAULT_ADS.task_center,
+          unlock_top: DEFAULT_ADS.task,
+          faq: DEFAULT_ADS.faq,
+          bottom: DEFAULT_ADS.social,
+        });
+      });
   }, []);
 
   // Analytics tracking: tries the compact record_event RPC first, then falls
