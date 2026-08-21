@@ -18,8 +18,16 @@ const sora = localFont({
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://unlockflow.vercel.app";
 
+// Google Search Console HTML-tag verification code (optional).
+// Paste the content of the google-site-verification meta tag here or,
+// better, set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in Vercel env vars.
+const GOOGLE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  verification: GOOGLE_VERIFICATION
+    ? { google: GOOGLE_VERIFICATION }
+    : undefined,
   title: {
     default: "UNLOCKFLOW — Create Unlock Links in 30 Seconds, No Signup",
     template: "%s | UNLOCKFLOW",
