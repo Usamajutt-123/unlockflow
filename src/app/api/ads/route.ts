@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
+export const dynamic = "force-dynamic";
 // Public: list active ads for the unlock page (grouped by slot).
 // Returns an empty array when Supabase isn't configured so the page
 // renders gracefully without ads.
