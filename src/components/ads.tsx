@@ -30,11 +30,91 @@ function AdImage({ ad, className }: { ad: Ad; className?: string }) {
 }
 
 /**
- * Injects raw ad-network HTML/JS (Adsterra, Monetag, PropellerAds, etc.).
+ * Adsterra "Banner" snippets (`atOptions` + invoke.js, served from
+ * highperformanceformat.com) render via `document.write`, which can only run
+ * while the page is still parsing. Injecting them after load would either
+ * render nothing or wipe the host page — so these are isolated in their own
+ * iframe instead (see DocWriteBannerAd below).
+ */
+function isDocWriteBanner(script: string) {
+  return /atOptions|highperformanceformat\.com|document\.write/i.test(script);
+}
+
+function parseBannerSize(script: string): { width: number; height: number } {
+  const w = /['"]width['"]\s*:\s*(\d+)/i.exec(script);
+  const h = /['"]height['"]\s*:\s*(\d+)/i.exec(script);
+  return {
+    width: w ? parseInt(w[1], 10) : 300,
+    height: h ? parseInt(h[1], 10) : 250,
+  };
+}
+
+/**
+ * Renders a `document.write`-based banner inside a sandboxed same-size iframe
+ * so it can't clear the host page, and scales it down (keeping aspect ratio)
+ * when the container is narrower than the ad — e.g. a 728×90 or 468×60 banner
+ * on a phone. No horizontal scroll, no clipping.
+ */
+function DocWriteBannerAd({ ad, className }: { ad: Ad; className?: string }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || !ad.script) return;
+    host.innerHTML = "";
+
+    const { width, height } = parseBannerSize(ad.script);
+
+    const iframe = document.createElement("iframe");
+    iframe.title = ad.title || "Advertisement";
+    iframe.setAttribute("scrolling", "no");
+    iframe.setAttribute("frameBorder", "0");
+    iframe.style.cssText =
+      "display:block;margin:0 auto;border:0;overflow:hidden;" +
+      `width:${width}px;height:${height}px;transform-origin:top center;`;
+    // The global rule `.ad-host iframe { max-width:100% !important }` would
+    // clip the (intentionally full-size) frame before we scale it — lift it.
+    iframe.style.setProperty("max-width", "none", "important");
+    iframe.srcdoc =
+      '<!doctype html><html><head><meta charset="utf-8">' +
+      "<style>html,body{margin:0;padding:0}</style></head>" +
+      `<body>${ad.script}</body></html>`;
+    host.appendChild(iframe);
+
+    const applyScale = () => {
+      const w = host.clientWidth;
+      const scale = w > 0 ? Math.min(1, w / width) : 1;
+      iframe.style.transform = `scale(${scale})`;
+      host.style.height = `${Math.ceil(height * scale)}px`;
+      host.style.overflow = "hidden";
+    };
+    applyScale();
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(applyScale);
+      ro.observe(host);
+    } else {
+      window.addEventListener("resize", applyScale);
+    }
+
+    return () => {
+      if (ro) ro.disconnect();
+      else window.removeEventListener("resize", applyScale);
+      host.innerHTML = "";
+    };
+  }, [ad.script, ad.title]);
+
+  return <div ref={hostRef} className={className} style={{ display: "block" }} />;
+}
+
+/**
+ * Injects raw ad-network HTML/JS that does NOT use `document.write`
+ * (Adsterra Native / Monetag / PropellerAds container-style snippets).
  * `<script>` tags injected via innerHTML do NOT execute, so we re-create
  * them as real script elements and append them to the live DOM.
  */
-function ScriptAd({ ad, className }: { ad: Ad; className?: string }) {
+function InlineScriptAd({ ad, className }: { ad: Ad; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,6 +148,13 @@ function ScriptAd({ ad, className }: { ad: Ad; className?: string }) {
   }, [ad.script]);
 
   return <div ref={ref} className={className} />;
+}
+
+function ScriptAd({ ad, className }: { ad: Ad; className?: string }) {
+  if (isDocWriteBanner(ad.script)) {
+    return <DocWriteBannerAd ad={ad} className={className} />;
+  }
+  return <InlineScriptAd ad={ad} className={className} />;
 }
 
 /** Quiet host for network scripts — no dashed empty placeholder box. */
@@ -164,5 +251,3 @@ export function InterstitialAd({ ad, onContinue }: { ad: Ad; onContinue: () => v
     </div>
   );
 }
-
-

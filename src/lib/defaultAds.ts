@@ -17,7 +17,7 @@ import type { Ad, AdSlot } from "./types";
 //
 //   Placement #1  middle of task list   -> 300×250 (Medium Rectangle)  ✓ added
 //   Placement #2  above unlock button   -> 728×90  (Leaderboard)       ✓ added
-//   Placement #3  center of FAQ         -> 468×60  (Full Banner)         ✓ added
+//   Placement #3  center of FAQ         -> 468×60  (Full Banner)       ✓ added
 //   Placement #4  bottom of page        -> 320×50  (Mobile Banner)     ✓ added
 // ===========================================================================
 
