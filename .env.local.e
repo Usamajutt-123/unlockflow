@@ -4,6 +4,11 @@
 # Optional: your public site URL (used for SEO metadata, sitemap, robots)
 NEXT_PUBLIC_SITE_URL=https://yourdomain.com
 
+# Optional: Google Search Console HTML-tag verification code.
+# GSC -> Add property -> URL prefix -> HTML tag -> copy ONLY the content value
+# of the meta tag (e.g. "abc123xyz") and paste it here.
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=
+
 # Public (anon) — safe to expose to the browser
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key-here
