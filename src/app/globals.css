@@ -862,6 +862,35 @@ body {
 .unlock-shell .ad-host iframe,
 .unlock-shell .ad-host img { max-width: 100% !important; }
 
+/* ------------------------------------------------------------------
+   Adsterra fixed-size banner scaling (mobile / small tablet).
+   The 728×90 (above-unlock) and 468×60 (FAQ) banners are wider than
+   smaller screens. These rules shrink ONLY those two placements so the
+   whole ad stays visible — no horizontal scroll, no clipped edges.
+   The 300×250 and 320×50 banners are already mobile-safe and are left
+   untouched, as is every other part of the page.
+   (Values below are a best-effort fit; if you need it pixel-perfect on
+   every device, ask and I can add a JS auto-scaler instead.)
+------------------------------------------------------------------ */
+@media (max-width: 804px) {
+  .unlock-reward-ad .ad-host { height: 47px; }
+  .unlock-reward-ad .ad-host iframe {
+    max-width: none !important;
+    width: 728px !important;
+    transform: scale(0.52);
+    transform-origin: top center;
+  }
+}
+@media (max-width: 544px) {
+  .unlock-faq-ad .ad-host { height: 42px; }
+  .unlock-faq-ad .ad-host iframe {
+    max-width: none !important;
+    width: 468px !important;
+    transform: scale(0.7);
+    transform-origin: top center;
+  }
+}
+
 .unlock-interstitial {
   position: fixed;
   inset: 0;
